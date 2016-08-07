@@ -83,6 +83,7 @@ module powerbi.extensibility.visual {
         private selectionManager: ISelectionManager;
         private dataView: DataView;
         private dicColor = [];
+        private totalsColor = '#5E5E5E';
         private viewport: IViewport;
         //private margin: IMargin = { left: 10, right: 10, bottom: 15, top: 15 };
         private margin: any = { left: 10, right: 10, bottom: 15, top: 15 };
@@ -306,9 +307,9 @@ module powerbi.extensibility.visual {
                 var xOffset = gridSizeWidth + this.margin.left;
                 var yOffset = this.margin.top;
 
-                 var dicColor = this.dicColor = [];
-                 this.getColors(dataView); 
-            
+                var dicColor = this.dicColor = [];
+                var totalsColor = this.totalsColor = this.getTotalsColor(dataView);
+                this.getColors(dataView); 
                 
                 this.mainGraphics.selectAll(".categoryYLabel")
                     .data(chartData.categoryY)
@@ -376,7 +377,7 @@ module powerbi.extensibility.visual {
                 
                 var selectionManager = this.selectionManager;
 
-                var heatMap = this.mainGraphics.selectAll(".categoryX")
+                var crosstab = this.mainGraphics.selectAll(".categoryX")
                     .data(chartData.dataPoints)
                     .enter().append("rect")
                     .attr("x", function (d:any, i) { return (chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10); })
@@ -394,7 +395,7 @@ module powerbi.extensibility.visual {
                   
                 function getColor(val, isTotal:boolean) { 
                       if (isTotal) {
-                        return '#5E5E5E';
+                          return totalsColor;
                       } else if (dicColor[val]) {
                           return dicColor[val].solid.color;
                       } else {
@@ -402,10 +403,10 @@ module powerbi.extensibility.visual {
                       }                   
                 }
                 
-                var elementAnimation: any = this.getAnimationMode(heatMap, true);
+                var elementAnimation: any = this.getAnimationMode(crosstab, true);
                 elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal) });
                 
-                var heatMap1 = this.mainGraphics.selectAll(".categoryX")
+                var crosstab1 = this.mainGraphics.selectAll(".categoryX")
                 .on('mouseover', function (d) {
                     d3.select(this).transition()
                         .ease("elastic")
@@ -470,7 +471,7 @@ module powerbi.extensibility.visual {
                         });
                 }
                 else {
-                    heatMap.append("title").text(<any>function (d) {
+                    crosstab.append("title").text(<any>function (d) {
                        //return valueFormatter.create({ value: Number(d.value) }).format(Number(d.value));
                     });
                 }
@@ -642,6 +643,21 @@ module powerbi.extensibility.visual {
             }
             return null;
         }
+
+        private getTotalsColor(dataView: DataView): string {
+            if (dataView) {
+                var objects = dataView.metadata.objects;
+                if (objects) {
+                    var general = objects['general'];
+                    if (general) {
+                       if (general['totalscolor']) {
+                           return general['totalscolor'].solid.color;
+                       }       
+                    }
+                }
+            }
+            return '#5E5E5E';
+        }
         
         private getColorVal(dataView: DataView, colorNum: string): number {
             if (dataView) {
@@ -737,14 +753,15 @@ module powerbi.extensibility.visual {
                             color3Val:this.getColorVal(dataView, '3'),
                             color3LegendVal:this.getLegendVal(dataView, '3'),
                             color4:this.getColor(dataView, '4'),
-                            color4Val:this.getColorVal(dataView, '5'),
+                            color4Val:this.getColorVal(dataView, '4'),
                             color4LegendVal:this.getLegendVal(dataView, '4'),
-                            color5:this.getColor(dataView, '6'),
-                            color5Val:this.getColorVal(dataView, '6'),
+                            color5:this.getColor(dataView, '5'),
+                            color5Val:this.getColorVal(dataView, '5'),
                             color5LegendVal:this.getLegendVal(dataView, '5'),
                             showdata: this.getShowData(dataView),
                             showlegend: this.getShowLegend(dataView),
-                            showtotals: this.getShowTotals(dataView)
+                            showtotals: this.getShowTotals(dataView),
+                            totalscolor: this.getTotalsColor(dataView)
                         }
                     });
                     break;

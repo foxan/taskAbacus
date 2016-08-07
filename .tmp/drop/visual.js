@@ -35,6 +35,7 @@ var powerbi;
                     function CrossTab(options) {
                         this.svgSize = { width: 800, height: 300 };
                         this.dicColor = [];
+                        this.totalsColor = '#5E5E5E';
                         //private margin: IMargin = { left: 10, right: 10, bottom: 15, top: 15 };
                         this.margin = { left: 10, right: 10, bottom: 15, top: 15 };
                         this.animationDuration = 1000;
@@ -218,6 +219,7 @@ var powerbi;
                             var xOffset = gridSizeWidth + this.margin.left;
                             var yOffset = this.margin.top;
                             var dicColor = this.dicColor = [];
+                            var totalsColor = this.totalsColor = this.getTotalsColor(dataView);
                             this.getColors(dataView);
                             this.mainGraphics.selectAll(".categoryYLabel")
                                 .data(chartData.categoryY)
@@ -270,7 +272,7 @@ var powerbi;
                                 this.svgSize.height += gridSizeHeight + yOffset * 2;
                             }
                             var selectionManager = this.selectionManager;
-                            var heatMap = this.mainGraphics.selectAll(".categoryX")
+                            var crosstab = this.mainGraphics.selectAll(".categoryX")
                                 .data(chartData.dataPoints)
                                 .enter().append("rect")
                                 .attr("x", function (d, i) { return (chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10); })
@@ -285,7 +287,7 @@ var powerbi;
                                 .style("fill", '#E8E8E8');
                             function getColor(val, isTotal) {
                                 if (isTotal) {
-                                    return '#5E5E5E';
+                                    return totalsColor;
                                 }
                                 else if (dicColor[val]) {
                                     return dicColor[val].solid.color;
@@ -294,9 +296,9 @@ var powerbi;
                                     return '#E8E8E8';
                                 }
                             }
-                            var elementAnimation = this.getAnimationMode(heatMap, true);
+                            var elementAnimation = this.getAnimationMode(crosstab, true);
                             elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal); });
-                            var heatMap1 = this.mainGraphics.selectAll(".categoryX")
+                            var crosstab1 = this.mainGraphics.selectAll(".categoryX")
                                 .on('mouseover', function (d) {
                                 d3.select(this).transition()
                                     .ease("elastic")
@@ -355,7 +357,7 @@ var powerbi;
                                 });
                             }
                             else {
-                                heatMap.append("title").text(function (d) {
+                                crosstab.append("title").text(function (d) {
                                     //return valueFormatter.create({ value: Number(d.value) }).format(Number(d.value));
                                 });
                             }
@@ -467,6 +469,20 @@ var powerbi;
                         }
                         return null;
                     };
+                    CrossTab.prototype.getTotalsColor = function (dataView) {
+                        if (dataView) {
+                            var objects = dataView.metadata.objects;
+                            if (objects) {
+                                var general = objects['general'];
+                                if (general) {
+                                    if (general['totalscolor']) {
+                                        return general['totalscolor'].solid.color;
+                                    }
+                                }
+                            }
+                        }
+                        return '#5E5E5E';
+                    };
                     CrossTab.prototype.getColorVal = function (dataView, colorNum) {
                         if (dataView) {
                             var objects = dataView.metadata.objects;
@@ -552,14 +568,15 @@ var powerbi;
                                         color3Val: this.getColorVal(dataView, '3'),
                                         color3LegendVal: this.getLegendVal(dataView, '3'),
                                         color4: this.getColor(dataView, '4'),
-                                        color4Val: this.getColorVal(dataView, '5'),
+                                        color4Val: this.getColorVal(dataView, '4'),
                                         color4LegendVal: this.getLegendVal(dataView, '4'),
-                                        color5: this.getColor(dataView, '6'),
-                                        color5Val: this.getColorVal(dataView, '6'),
+                                        color5: this.getColor(dataView, '5'),
+                                        color5Val: this.getColorVal(dataView, '5'),
                                         color5LegendVal: this.getLegendVal(dataView, '5'),
                                         showdata: this.getShowData(dataView),
                                         showlegend: this.getShowLegend(dataView),
-                                        showtotals: this.getShowTotals(dataView)
+                                        showtotals: this.getShowTotals(dataView),
+                                        totalscolor: this.getTotalsColor(dataView)
                                     }
                                 });
                                 break;
@@ -649,8 +666,8 @@ var powerbi;
     (function (visuals) {
         var plugins;
         (function (plugins) {
-            plugins.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77_DEBUG = {
-                name: 'PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77_DEBUG',
+            plugins.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 = {
+                name: 'PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77',
                 displayName: 'CrossTab',
                 class: 'CrossTab',
                 version: '1.0.0',

@@ -107,6 +107,10 @@
                         "showtotals": {
                             "type": { "bool": true },
                             "displayName": "Show Totals"
+                        },
+                        "totalscolor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Totals Colour"
                         }
                     }
                 }
