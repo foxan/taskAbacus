@@ -1,0 +1,114 @@
+{
+    "dataRoles": [
+                {
+                    "name": "XAxis",
+                    "kind": 0,
+                    "displayName":"X-Axis"
+                },
+                {
+                    "name": "YAxis",
+                    "kind": 1,
+                    "displayName":"Y-Axis"
+                }
+
+            ],
+            "dataViewMappings": [
+                { 
+                    "categorical": {
+                    "categories": {
+                        "for": { "in": "XAxis" },
+                        "dataReductionAlgorithm": { "top": {} }
+                    },
+                    "values": {
+                        "select": [
+                            { "bind": { "to": "YAxis" } }
+                        ]
+                    }
+                }                           
+            }],
+
+            "objects": {
+                "general": {
+                    "displayName": "General",
+                    "properties": {
+                        "color1": {
+                            "type": { "fill": 
+                                        { "solid": { 
+                                            "color": true 
+                                            } 
+                                        } 
+                                    },
+                            "displayName": "Colour 1"
+                        },
+                        "color1Val": {
+                            "type": { "numeric": true },
+                            "displayName": "Colour 1 Value"
+                        },
+                        "color1LegendVal": {
+                            "type": { "text": true },
+                            "displayName": "Legend 1 Text"
+                        },
+                        "color2": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Colour 2"
+                        },
+                        "color2Val": {
+                            "type": { "numeric": true },
+                            "displayName": "Colour 2 Value"
+                        },
+                        "color2LegendVal": {
+                            "type": { "text": true },
+                            "displayName": "Legend 2 Text"
+                        },
+                        "color3": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Colour 3'"
+                        },
+                        "color3Val": {
+                            "type": { "numeric": true },
+                            "displayName": "Colour 3 Value"
+                        },
+                        "color3LegendVal": {
+                            "type": { "text": true },
+                            "displayName": "Legend 3 Text"
+                        },
+                        "color4": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Colour 4"
+                        },
+                        "color4Val": {
+                            "type": { "numeric": true },
+                            "displayName": "Colour 4 Value"
+                        },
+                        "color4LegendVal": {
+                            "type": { "text": true },
+                            "displayName": "Legend 4 Text"
+                        },
+                        "color5": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Colour 5"
+                        },
+                        "color5Val": {
+                            "type": { "numeric": true },
+                            "displayName": "Colour 5 Value"
+                        },
+                        "color5LegendVal": {
+                            "type": { "text": true },
+                            "displayName": "Legend 5 Text"
+                        },
+                        "showlegend": {
+                            "type": { "bool": true },
+                            "displayName": "Legend"
+                        },
+                        "showdata": {
+                            "type": { "bool": true },
+                            "displayName": "Values In Grid"
+                        },
+                        "showtotals": {
+                            "type": { "bool": true },
+                            "displayName": "Show Totals"
+                        }
+                    }
+                }
+            }
+}
