@@ -8,9 +8,14 @@ You can load an X-Axis (Category), Y-Axis (Category) and a Values (Measure). (Op
 
 The 'Override Dimension' is a measure that should resolve to 0 or 1. If the value is 1, then the background color provided in 'Override Dimension Colour' will be used. This is useful if you want to override the background colour of certain squares to highlight values. In my example I use the Override Dimension if the particular square is 'Late'
 
-![crossTab Gif](http://i.giphy.com/3o6ZsSjGhbf9ePxE0U.gif)
+![crossTab Gif](http://i.giphy.com/l0MYP5WCl1rg1hNyU.gif)
+
+Here are the options you can set:
+
+![options dialog Gif](http://i.giphy.com/l0MYzhvGG98jslu1i.gif)
 
 **Coming Soon**
 
-2 Extra Override Dimensions
+Set colours from the values submitted, rather than being stuck with a max of 10 values
+2 Extra Override Dimensions:
 1 will add a border of the colour of your choosing the other will add a line on the right handside of the square.
