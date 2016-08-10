@@ -31,11 +31,12 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
     export interface CrossTabDataPoint {
         categoryX: string;
         categoryY: string;
+        overrideDimension:boolean;
         value: number;
-        valueStr: string;
-        identity: number;
+        identity: ISelectionId;
         fill:string,
-        isTotal:boolean
+        isTotal:boolean,
+        selected:boolean
     }
     export interface ISvgSize {
         width: number;
@@ -80,10 +81,12 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
         private svgSize: ISvgSize = { width: 800, height: 300 };
         private mainGraphics: d3.Selection<SVGElement>;
         private colors: IDataColorPalette;
+        private host: IVisualHost;
         private selectionManager: ISelectionManager;
         private dataView: DataView;
         private dicColor = [];
         private totalsColor = '#5E5E5E';
+        private overrideDimensionColor = '#FF6363';
         private viewport: IViewport;
         //private margin: IMargin = { left: 10, right: 10, bottom: 15, top: 15 };
         private margin: any = { left: 10, right: 10, bottom: 15, top: 15 };
@@ -99,27 +102,16 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             this.updateCount = 0;
         }*/
 
-        public static converter(dataView: DataView, dicColors : any /*colors: IDataColorPalette*/, showTotals:boolean): any {
+        public static visualTransform(dataView: DataView, host: IVisualHost, showTotals:boolean): any {
             // no category - nothing to display
-            if (!dataView ||
-                !dataView.categorical ||
-                !dataView.categorical.categories ||
-                !dataView.categorical.categories[0] ||
-                !dataView.categorical.categories[0].values ||
-                !dataView.categorical.categories[0].values.length) {
-                return {
-                    dataPoints: null
-                };
-            }
-            // no values - nothing to display
-            if (!dataView.categorical.values ||
-                !dataView.categorical.values[0] ||
-                !dataView.categorical.values[0].values ||
-                !dataView.categorical.values[0].values.length) {
-                return {
-                    dataPoints: null
-                };
-            }
+
+            if (!dataView
+            || !dataView
+            || !dataView.categorical
+            || !dataView.categorical.categories
+            || !dataView.categorical.categories[0].source
+            || !dataView.categorical.values)
+                return { datapoints:null };
 
             //var categoryValueFormatter: IValueFormatter;	
             //var legendValueFormatter: IValueFormatter;
@@ -135,113 +127,109 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             //var formatStringProp = CrossTab.Properties.general.formatString;
             
             var dataViewMetadata: DataViewMetadata = dataView.metadata;
-            
-            //this calculates the totals on the bottom Totals row, which is added at the end (see below)
 
-            var totalsCol = [];
-            if (showTotals) {
-                for (var n:number = 1; n < dataView.table.columns.length; n++) {
-                    var total = 0;
-                    for (var m:number = 0; m < dataView.table.rows.length; m++) {
-                            if (dataView.table.rows[m][n] && typeof dataView.table.rows[m][n] !== 'object') {
-                                total += dataView.table.rows[m][n];
-                            }
-                    }
-                    if (total && dataView.table.rows.length > 0) {
-                        totalsCol.push({
-                            categoryX:dataView.metadata.columns[n].displayName,
-                            value:Math.round(total / dataView.table.rows.length)
-                        });
-                    } else {
-                        totalsCol.push({
-                            categoryX:dataView.metadata.columns[n].displayName,
-                            value:null
-                        });
-                    }
-                    
-                }
+            let categorical = dataView.categorical;
+            let category = categorical.categories[0];
+            let dataValue = categorical.values[0];
+
+            let dataMax: number;
+
+            //fill X-Axis        
+            for (var i:number = 0; i < dataView.categorical.categories[0].values.length; i++) {
+                catX.push(dataView.categorical.categories[0].values[i]);
             }
-            
 
-            //create standard datapoints
-            for (var i in dataView.table.rows) {
-                data = [];
-                values = []; k = 0;
-                for (var j in dataView.table.columns) {
-                    //id = SelectionId.createWithId(dataView.categorical.categories[0].identity[0]);
-                    
-                    if (!catMetaData.columns[j].isMeasure) {
-                        categoryY = catY[i] = catTable.rows[i][j];
-                    }
-                    if (catMetaData.columns[j].isMeasure) {
-                        var value = catTable.rows[i][j];
-                        var valueStr;
-                        if (value !== undefined) {
-                            categoryX = catX[j] = catMetaData.columns[j].displayName;
-                            if (catMetaData.columns[j].groupName) {
-                                categoryX += ": " + catMetaData.columns[j].groupName;
-                                catY[j] += ": " + catMetaData.columns[j].groupName;
+            //fill Y-Axis
+            for (var i:number = 0; i < dataView.categorical.values.length; i++) {
+                if (dataView.categorical.values[i].source && dataView.categorical.values[i].source.roles && dataView.categorical.values[i].source.roles['Values']) {
+                    //we are in a 'Values' object
+                    var yAxis:string = dataView.categorical.values[i].source.groupName;
+                    var xTotal:number = 0;
+
+                    //add Y Category
+                    catY.push(yAxis);
+
+                    //loop through the 'Values' measure to build dataPoints
+                    for (var j:number = 0; j < dataView.categorical.values[i].values.length; j++) {
+
+                        //some values will be null or not exist. We still want to display a square so return as 0
+                        var val;
+                        if (dataView.categorical.values[i].values[j]) {
+                            val = dataView.categorical.values[i].values[j];
+                        } else {
+                            val = 0;
+                        }
+
+                        //add to the x-axis total for this row
+                        xTotal += val;
+
+                        //the override dimension should replace the background colour. This can be used for a concept of 'late' or something else that should override the colour based on the supplied value. (Optional)
+                       var overrideDimension:boolean = false;
+                        if (dataView.categorical.values[i + 1] && dataView.categorical.values[i + 1].values[j]) {
+                            if (dataView.categorical.values[i + 1].values[j] === 1) {
+                                overrideDimension = dataView.categorical.values[i + 1].values[j];
                             }
                         }
-                        values[k] = { value: value, valueStr: valueStr, category: categoryX, fill:null };
-                        k++;
-                    }
-                }
-               
-                values.forEach(function (element) {
-                    dataPoints.push({
-                        categoryY: categoryY,
-                        categoryX: element.category,
-                        value: element.value,
-                        valueStr: element.valueStr,
-                        identity: id,
-                        fill:element.fill,
-                        isTotal:false
-                    });
-                }, this);
 
-
-                if (showTotals) {
-                    //For totals (average) at the end of each row 
-                    var total = 0;
-                    for (var l in values) {
-                        if (values[l].value) {
-                            total += values[l].value;
-                        }                    
+                         dataPoints.push({
+                            categoryY: yAxis,
+                            categoryX: catX[j],
+                            overrideDimension:overrideDimension,
+                            value: val,
+                            //identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], i).withMeasure(dataView.categorical.values[i].source.queryName).withSeries(categorical.values, categorical.values[i]).createSelectionId(),
+                            identity: host.createSelectionIdBuilder().withSeries(categorical.values, categorical.values[i]).createSelectionId(),
+                            fill:null,
+                            isTotal:false,
+                            selected:false
+                        });
                     }
-                    //add values for end of each row to this rows set of datapoints
-                    dataPoints.push({
-                        categoryY: categoryY,
-                        categoryX: 'Total',
-                        value: Math.round(total / values.length),
-                        valueStr: null,
-                        identity: null,
-                        fill:null,
-                        isTotal:true
-                    });
+
+                        
+                    //add total datapoint at the end of the x-axis
+
+                    if (showTotals) {
+                        dataPoints.push({
+                            categoryY: yAxis,
+                            categoryX: 'Total',
+                            overrideDimension:false,
+                            value: Math.round(xTotal / dataView.categorical.values[i].values.length),
+                            identity: null,
+                            fill:null,
+                            isTotal:true,
+                            selected:false
+                        });
+                    }
+
                 }
-                 
             }
 
             if (showTotals) {
-                //add totals row
-                totalsCol.forEach(function(element) {
-                        dataPoints.push({
-                            categoryY:'Total',
-                            categoryX:element.categoryX,
-                            value:element.value,
-                            valueStr:null,
-                            identity:null,
-                            fill:null,
-                            isTotal:true
-                        });
-                }, this);
+                for (var n:number = 0; n < dataView.categorical.values[0].values.length; n++) {  //this allows us to loop through all of the x-axis columns at the different levels in the arrays
+                    var yTotal:number = 0;
+                    for (var i:number = 0; i < dataView.categorical.values.length; i++) {
+                        if (dataView.categorical.values[i].values && dataView.categorical.values[i].values[n] !== undefined) {
+                            yTotal += dataView.categorical.values[i].values[n];
+                        } 
+                    }
 
-                //push totals columns
+                    dataPoints.push({
+                        categoryY: 'Total',
+                        categoryX: dataView.categorical.categories[0].values[n],
+                        overrideDimension:false,
+                        value: Math.round(yTotal / dataView.categorical.values.length),
+                        identity: null,
+                        fill:null,
+                        isTotal:true,
+                        selected:false
+                    });
+                }
+            }
+
+            if (showTotals) {
                 catX.push('Total');
                 catY.push('Total');
             }
-
+            
             return {
                 dataPoints: dataPoints,
                 categoryX: catX.filter(function (n) { return n !== undefined; }),
@@ -253,6 +241,8 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
 
 
        constructor(options: VisualConstructorOptions) {
+
+            this.host = options.host;
 
             this.svgSize.height = options.element.clientHeight;
             this.svgSize.width = options.element.clientWidth;
@@ -287,10 +277,10 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
         private updateInternal(options: VisualUpdateOptions): void {
             var dataView = this.dataView = options.dataViews[0];
             var showTotals = this.getShowTotals(options.dataViews[0]);
-            var chartData = this.chartData = CrossTab.converter(dataView, this.dicColor, showTotals);
+            var chartData = this.chartData = CrossTab.visualTransform(dataView, this.host, showTotals);
                    
             //var suppressAnimations = Boolean(options.suppressAnimations);
-            
+
             if (chartData.dataPoints) {
                 var minDataValue = d3.min(chartData.dataPoints, function (d: CrossTabDataPoint) { return d.value; });
                 var maxDataValue = d3.max(chartData.dataPoints, function (d: CrossTabDataPoint) { return d.value; });
@@ -309,6 +299,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
 
                 var dicColor = this.dicColor = [];
                 var totalsColor = this.totalsColor = this.getTotalsColor(dataView);
+                var overrideDimensionColor = this.overrideDimensionColor = this.getOverrideDemensionColor(dataView);
                 this.getColors(dataView); 
                 
                 this.mainGraphics.selectAll(".categoryYLabel")
@@ -393,8 +384,10 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     
 
                   
-                function getColor(val, isTotal:boolean) { 
-                      if (isTotal) {
+                function getColor(val, isTotal:boolean, overrideDimension:boolean) { 
+                      if (overrideDimension) {
+                          return overrideDimensionColor;
+                      } else if (isTotal) {
                           return totalsColor;
                       } else if (dicColor[val]) {
                           return dicColor[val].solid.color;
@@ -404,10 +397,10 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                 }
                 
                 var elementAnimation: any = this.getAnimationMode(crosstab, true);
-                elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal) });
+                elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal, d.overrideDimension) });
                 
                 var crosstab1 = this.mainGraphics.selectAll(".categoryX")
-                .on('mouseover', function (d) {
+                .on('mouseover', function (d:CrossTabDataPoint) {
                     d3.select(this).transition()
                         .ease("elastic")
                         .duration(1000)
@@ -416,27 +409,30 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                         
                     
                     mouseover(d.categoryX, d.categoryY);
-                    //d3.event.stopPropagation();
+                    (<Event>d3.event).stopPropagation();
                 })
-                .on('mouseout', function (d) {
+                .on('mouseout', function (d:CrossTabDataPoint) {
                     d3.select(this).transition()
                         .ease("elastic")
                         .duration(1000)
                         .attr("rx", 4)
                         .attr('ry', 4)
                     mouseout();
-                    //d3.event.stopPropagation();
+                    (<Event>d3.event).stopPropagation();
                 })
-                .on('click', function (d) {
+                .on('click', function (d:CrossTabDataPoint) {
                     if (d.selected) {
                         d3.selectAll(".categoryX").style('opacity', 1);  
-                        d.selected = null              
+                        d.selected = false;
+                        selectionManager.clear();            
                     } else {
                         d3.selectAll(".categoryX").style('opacity', 0.6);
                         
-                        //selectionManager.select(d.identity).then(ids => d3.select(this).style('opacity', 1));
+                        debugger;
+                        selectionManager.select(d.identity).then(ids => d3.select(this).style('opacity', 1));
                         d.selected = true;   
-                    }                    
+                    }
+                    (<Event>d3.event).stopPropagation();                    
                 })
                 
                 function mouseover(categoryX, categoryY) {
@@ -475,6 +471,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                        //return valueFormatter.create({ value: Number(d.value) }).format(Number(d.value));
                     });
                 }
+
 
                 var showLegend = this.getShowLegend(dataView);
 
@@ -618,7 +615,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                 if (objects) {
                     var general = objects['general'];
                     if (general) {
-                        for (var i = 1; i <= 5; i++) {
+                        for (var i = 0; i <= 10; i++) {
                            if (general['color' + i] && general['color' + i + 'Val']) {
                                 this.dicColor[general['color' + i + 'Val']] = general['color' + i];
                            } 
@@ -657,6 +654,21 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                 }
             }
             return '#5E5E5E';
+        }
+
+        private getOverrideDemensionColor(dataView:DataView):string {
+            if (dataView) {
+                var objects = dataView.metadata.objects;
+                if (objects) {
+                    var general = objects['general'];
+                    if (general) {
+                       if (general['overridedimensioncolor']) {
+                           return general['overridedimensioncolor'].solid.color;
+                       }       
+                    }
+                }
+            }
+            return '#FF6363';
         }
         
         private getColorVal(dataView: DataView, colorNum: string): number {
@@ -745,19 +757,30 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                         properties: {
                             color1:this.getColor(dataView, '1'),
                             color1Val:this.getColorVal(dataView, '1'),
-                            color1LegendVal:this.getLegendVal(dataView, '1'),               
+                            //color1LegendVal:this.getLegendVal(dataView, '1'),               
                             color2:this.getColor(dataView, '2'),
                             color2Val:this.getColorVal(dataView, '2'),
-                            color2LegendVal:this.getLegendVal(dataView, '2'),
+                            //color2LegendVal:this.getLegendVal(dataView, '2'),
                             color3:this.getColor(dataView, '3'),
                             color3Val:this.getColorVal(dataView, '3'),
-                            color3LegendVal:this.getLegendVal(dataView, '3'),
+                            //color3LegendVal:this.getLegendVal(dataView, '3'),
                             color4:this.getColor(dataView, '4'),
                             color4Val:this.getColorVal(dataView, '4'),
-                            color4LegendVal:this.getLegendVal(dataView, '4'),
+                            //color4LegendVal:this.getLegendVal(dataView, '4'),
                             color5:this.getColor(dataView, '5'),
                             color5Val:this.getColorVal(dataView, '5'),
-                            color5LegendVal:this.getLegendVal(dataView, '5'),
+                            //color5LegendVal:this.getLegendVal(dataView, '5'),
+                            color6:this.getColor(dataView, '6'),
+                            color6Val:this.getColorVal(dataView, '6'),
+                            color7:this.getColor(dataView, '7'),
+                            color7Val:this.getColorVal(dataView, '7'),
+                            color8:this.getColor(dataView, '8'),
+                            color8Val:this.getColorVal(dataView, '8'),
+                            color9:this.getColor(dataView, '9'),
+                            color9Val:this.getColorVal(dataView, '9'),
+                            color10:this.getColor(dataView, '10'),
+                            color10Val:this.getColorVal(dataView, '10'),
+                            overridedimensioncolor:this.getOverrideDemensionColor(dataView),
                             showdata: this.getShowData(dataView),
                             showlegend: this.getShowLegend(dataView),
                             showtotals: this.getShowTotals(dataView),
