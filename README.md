@@ -16,6 +16,6 @@ Here are the options you can set:
 
 **Coming Soon**
 
-Set colours from the values submitted, rather than being stuck with a max of 10 values
-2 Extra Override Dimensions:
-1 will add a border of the colour of your choosing the other will add a line on the right handside of the square.
+* Set colours from the values submitted, rather than being stuck with a max of 10 values
+* 2 Extra Override Dimensions:
+* 1 will add a border of the colour of your choosing the other will add a line on the right handside of the square.
