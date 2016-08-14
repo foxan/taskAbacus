@@ -37,6 +37,8 @@ var powerbi;
                         this.dicColor = [];
                         this.totalsColor = '#5E5E5E';
                         this.overrideDimensionColor = '#FF6363';
+                        this.borderDimensionColor = '#FF6363';
+                        this.timelineDimensionColor = '#0033FF';
                         //private margin: IMargin = { left: 10, right: 10, bottom: 15, top: 15 };
                         this.margin = { left: 10, right: 10, bottom: 15, top: 15 };
                         this.animationDuration = 1000;
@@ -100,33 +102,68 @@ var powerbi;
                                 //loop through the 'Values' measure to build dataPoints
                                 for (var j = 0; j < dataView.categorical.values[i].values.length; j++) {
                                     //some values will be null or not exist. We still want to display a square so return as 0
-                                    var val;
-                                    if (dataView.categorical.values[i].values[j]) {
-                                        val = dataView.categorical.values[i].values[j];
-                                    }
-                                    else {
-                                        val = 0;
-                                    }
-                                    //add to the x-axis total for this row
-                                    xTotal += val;
-                                    //the override dimension should replace the background colour. This can be used for a concept of 'late' or something else that should override the colour based on the supplied value. (Optional)
-                                    var overrideDimension = false;
-                                    if (dataView.categorical.values[i + 1] && dataView.categorical.values[i + 1].values[j]) {
-                                        if (dataView.categorical.values[i + 1].values[j] === 1) {
-                                            overrideDimension = dataView.categorical.values[i + 1].values[j];
-                                        }
-                                    }
-                                    dataPoints.push({
+                                    var datapoint = {
                                         categoryY: yAxis,
                                         categoryX: catX[j],
-                                        overrideDimension: overrideDimension,
-                                        value: val,
+                                        overrideDimension: false,
+                                        borderDimension: false,
+                                        timelineDimension: false,
+                                        value: null,
                                         //identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], i).withMeasure(dataView.categorical.values[i].source.queryName).withSeries(categorical.values, categorical.values[i]).createSelectionId(),
                                         identity: host.createSelectionIdBuilder().withSeries(categorical.values, categorical.values[i]).createSelectionId(),
                                         fill: null,
                                         isTotal: false,
                                         selected: false
-                                    });
+                                    };
+                                    if (dataView.categorical.values[i].values[j]) {
+                                        datapoint.value = dataView.categorical.values[i].values[j];
+                                    }
+                                    else {
+                                        datapoint.value = 0;
+                                    }
+                                    //add to the x-axis total for this row
+                                    xTotal += datapoint.value;
+                                    //the override dimension should replace the background colour. This can be used for a concept of 'late' or something else that should override the colour based on the supplied value. (Optional)
+                                    if (dataView.categorical.values[i + 1] && dataView.categorical.values[i + 1].values[j]) {
+                                        if (dataView.categorical.values[i + 1].values[j] === 1 && dataView.categorical.values[i + 1].source.groupName === dataView.categorical.values[i].source.groupName) {
+                                            if (dataView.categorical.values[i + 1].source.roles['OverrideDimension'] === true) {
+                                                datapoint.overrideDimension = true;
+                                            }
+                                            else if (dataView.categorical.values[i + 1].source.roles['BorderDimension'] === true) {
+                                                datapoint.borderDimension = true;
+                                            }
+                                            else if (dataView.categorical.values[i + 1].source.roles['TimelineDimension'] === true) {
+                                                datapoint.timelineDimension = true;
+                                            }
+                                        }
+                                    }
+                                    if (dataView.categorical.values[i + 2] && dataView.categorical.values[i + 2].values[j]) {
+                                        if (dataView.categorical.values[i + 2].values[j] === 1 && dataView.categorical.values[i + 2].source.groupName === dataView.categorical.values[i].source.groupName) {
+                                            if (dataView.categorical.values[i + 2].source.roles['OverrideDimension'] === true) {
+                                                datapoint.overrideDimension = true;
+                                            }
+                                            else if (dataView.categorical.values[i + 2].source.roles['BorderDimension'] === true) {
+                                                datapoint.borderDimension = true;
+                                            }
+                                            else if (dataView.categorical.values[i + 2].source.roles['TimelineDimension'] === true) {
+                                                datapoint.timelineDimension = true;
+                                            }
+                                        }
+                                    }
+                                    if (dataView.categorical.values[i + 3] && dataView.categorical.values[i + 3].values[j]) {
+                                        if (dataView.categorical.values[i + 3].values[j] === 1 && dataView.categorical.values[i + 3].source.groupName === dataView.categorical.values[i].source.groupName) {
+                                            if (dataView.categorical.values[i + 3].source.roles['OverrideDimension'] === true) {
+                                                datapoint.overrideDimension = true;
+                                            }
+                                            else if (dataView.categorical.values[i + 3].source.roles['BorderDimension'] === true) {
+                                                datapoint.borderDimension = true;
+                                            }
+                                            else if (dataView.categorical.values[i + 3].source.roles['TimelineDimension'] === true) {
+                                                datapoint.timelineDimension = true;
+                                            }
+                                        }
+                                    }
+                                    dataPoints.push(datapoint);
                                 }
                                 //add total datapoint at the end of the x-axis
                                 if (showTotals) {
@@ -134,6 +171,8 @@ var powerbi;
                                         categoryY: yAxis,
                                         categoryX: 'Total',
                                         overrideDimension: false,
+                                        borderDimension: false,
+                                        timelineDimension: false,
                                         value: Math.round(xTotal / dataView.categorical.values[i].values.length),
                                         identity: null,
                                         fill: null,
@@ -155,6 +194,8 @@ var powerbi;
                                     categoryY: 'Total',
                                     categoryX: dataView.categorical.categories[0].values[n],
                                     overrideDimension: false,
+                                    borderDimension: false,
+                                    timelineDimension: false,
                                     value: Math.round(yTotal / dataView.categorical.values.length),
                                     identity: null,
                                     fill: null,
@@ -185,6 +226,10 @@ var powerbi;
                     CrossTab.prototype.updateInternal = function (options) {
                         var dataView = this.dataView = options.dataViews[0];
                         var showTotals = this.getShowTotals(options.dataViews[0]);
+                        var totalsColor = this.totalsColor = this.getTotalsColor(dataView);
+                        var overrideDimensionColor = this.overrideDimensionColor = this.getOverrideDimensionColor(dataView);
+                        var borderDimensionColor = this.borderDimensionColor = this.getBorderDimensionColor(dataView);
+                        var timelineDimensionColor = this.timelineDimensionColor = this.getTimelineDimensionColor(dataView);
                         var chartData = this.chartData = CrossTab.visualTransform(dataView, this.host, showTotals);
                         //var suppressAnimations = Boolean(options.suppressAnimations);
                         if (chartData.dataPoints) {
@@ -199,8 +244,6 @@ var powerbi;
                             var xOffset = gridSizeWidth + this.margin.left;
                             var yOffset = this.margin.top;
                             var dicColor = this.dicColor = [];
-                            var totalsColor = this.totalsColor = this.getTotalsColor(dataView);
-                            var overrideDimensionColor = this.overrideDimensionColor = this.getOverrideDemensionColor(dataView);
                             this.getColors(dataView);
                             this.mainGraphics.selectAll(".categoryYLabel")
                                 .data(chartData.categoryY)
@@ -259,14 +302,30 @@ var powerbi;
                                 .attr("x", function (d, i) { return (chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10); })
                                 .attr("y", function (d, i) { return ((chartData.categoryY.indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })
                                 .attr("class", "categoryX bordered")
-                                .attr("width", gridSizeWidth)
-                                .attr("height", gridSizeHeight)
+                                .attr("width", gridSizeWidth - 1)
+                                .attr("height", gridSizeHeight - 1)
                                 .attr("rx", 4)
                                 .attr("ry", 4)
-                                .style("stroke", 'white')
+                                .style("stroke", function (d, i) {
+                                return d.borderDimension == true ? borderDimensionColor : 'White';
+                            })
                                 .style("stroke-width", 1)
                                 .style("fill", '#E8E8E8');
-                            function getColor(val, isTotal, overrideDimension) {
+                            var currentX = 0, currentY = 0;
+                            var crosstab3 = this.mainGraphics.selectAll(".timelineDimension")
+                                .data(chartData.dataPoints)
+                                .enter()
+                                .append("line")
+                                .attr("visibility", function (d, i) {
+                                return d.timelineDimension == true ? "visible" : "hidden";
+                            })
+                                .style("stroke", function (d, i) { return timelineDimensionColor; }) // colour the line
+                                .attr("x1", function (d, i) { return ((chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; }) // x position of the first end of the line
+                                .attr("y1", function (d, i) { return ((chartData.categoryY.indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; }) // y position of the first end of the line
+                                .attr("x2", function (d, i) { return ((chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; }) // x position of the second end of the line
+                                .attr("y2", function (d, i) { return (((chartData.categoryY.indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + 28; });
+                            d3.selectAll("line[visibility=hidden]").remove();
+                            function getColor(val, isTotal, overrideDimension, borderDimension, timelineDimension) {
                                 if (overrideDimension) {
                                     return overrideDimensionColor;
                                 }
@@ -281,7 +340,7 @@ var powerbi;
                                 }
                             }
                             var elementAnimation = this.getAnimationMode(crosstab, true);
-                            elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal, d.overrideDimension); });
+                            elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal, d.overrideDimension, d.borderDimension, d.timelineDimension); });
                             var crosstab1 = this.mainGraphics.selectAll(".categoryX")
                                 .on('mouseover', function (d) {
                                 d3.select(this).transition()
@@ -463,22 +522,50 @@ var powerbi;
                             if (objects) {
                                 var general = objects['general'];
                                 if (general) {
-                                    if (general['totalscolor']) {
-                                        return general['totalscolor'].solid.color;
+                                    if (general['totalsColor']) {
+                                        return general['totalsColor'].solid.color;
                                     }
                                 }
                             }
                         }
                         return '#5E5E5E';
                     };
-                    CrossTab.prototype.getOverrideDemensionColor = function (dataView) {
+                    CrossTab.prototype.getOverrideDimensionColor = function (dataView) {
                         if (dataView) {
                             var objects = dataView.metadata.objects;
                             if (objects) {
                                 var general = objects['general'];
                                 if (general) {
-                                    if (general['overridedimensioncolor']) {
-                                        return general['overridedimensioncolor'].solid.color;
+                                    if (general['overrideDimensionColor']) {
+                                        return general['overrideDimensionColor'].solid.color;
+                                    }
+                                }
+                            }
+                        }
+                        return '#FF6363';
+                    };
+                    CrossTab.prototype.getBorderDimensionColor = function (dataView) {
+                        if (dataView) {
+                            var objects = dataView.metadata.objects;
+                            if (objects) {
+                                var general = objects['general'];
+                                if (general) {
+                                    if (general['borderDimensionColor']) {
+                                        return general['borderDimensionColor'].solid.color;
+                                    }
+                                }
+                            }
+                        }
+                        return '#FF6363';
+                    };
+                    CrossTab.prototype.getTimelineDimensionColor = function (dataView) {
+                        if (dataView) {
+                            var objects = dataView.metadata.objects;
+                            if (objects) {
+                                var general = objects['general'];
+                                if (general) {
+                                    if (general['timelineDimensionColor']) {
+                                        return general['timelineDimensionColor'].solid.color;
                                     }
                                 }
                             }
@@ -519,7 +606,7 @@ var powerbi;
                             if (objects) {
                                 var general = objects['general'];
                                 if (general) {
-                                    return general['showdata'];
+                                    return general['showData'];
                                 }
                             }
                         }
@@ -531,7 +618,7 @@ var powerbi;
                             if (objects) {
                                 var general = objects['general'];
                                 if (general) {
-                                    return general['showlegend'];
+                                    return general['showLegend'];
                                 }
                             }
                         }
@@ -543,7 +630,7 @@ var powerbi;
                             if (objects) {
                                 var general = objects['general'];
                                 if (general) {
-                                    return general['showtotals'];
+                                    return general['showTotals'];
                                 }
                             }
                         }
@@ -585,11 +672,13 @@ var powerbi;
                                         color9Val: this.getColorVal(dataView, '9'),
                                         color10: this.getColor(dataView, '10'),
                                         color10Val: this.getColorVal(dataView, '10'),
-                                        overridedimensioncolor: this.getOverrideDemensionColor(dataView),
-                                        showdata: this.getShowData(dataView),
-                                        showlegend: this.getShowLegend(dataView),
-                                        showtotals: this.getShowTotals(dataView),
-                                        totalscolor: this.getTotalsColor(dataView)
+                                        overrideDimensionColor: this.getOverrideDimensionColor(dataView),
+                                        borderDimensionColor: this.getBorderDimensionColor(dataView),
+                                        timelineDimensionColor: this.getTimelineDimensionColor(dataView),
+                                        showData: this.getShowData(dataView),
+                                        showLegend: this.getShowLegend(dataView),
+                                        showTotals: this.getShowTotals(dataView),
+                                        totalsColor: this.getTotalsColor(dataView)
                                     }
                                 });
                                 break;

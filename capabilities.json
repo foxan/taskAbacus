@@ -18,7 +18,17 @@
                 {
                     "name": "OverrideDimension",
                     "kind": 1,
-                    "displayName": "OverrideDimension"
+                    "displayName": "Override Dimension"
+                },
+                {
+                    "name": "BorderDimension",
+                    "kind": 1,
+                    "displayName": "Border Dimension"
+                },
+                {
+                    "name": "TimelineDimension",
+                    "kind": 1,
+                    "displayName": "Timeline Dimension"
                 }
             ],
             "dataViewMappings": [                
@@ -40,6 +50,16 @@
                                         "for": {
                                             "in": "OverrideDimension"
                                         }
+                                    },
+                                    {
+                                        "for": {
+                                            "in": "BorderDimension"
+                                        }
+                                    },
+                                    {
+                                        "for": {
+                                            "in": "TimelineDimension"
+                                        }
                                     }
                                 ]
                             },
@@ -47,9 +67,7 @@
                         }
                     }
                 }
-            
             ],
-
             "objects": {
                 "general": {
                     "displayName": "General",
@@ -134,23 +152,27 @@
                             "type": { "numeric": true },
                             "displayName": "Colour 10 Value"
                         },
-                        "overridedimensioncolor": {
+                        "overrideDimensionColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Override Dimension Colour"
                         },
-                        "showlegend": {
-                            "type": { "bool": true },
-                            "displayName": "Legend"
+                        "borderDimensionColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Border Dimension Colour"
                         },
-                        "showdata": {
-                            "type": { "bool": true },
-                            "displayName": "Values In Grid"
+                        "timelineDimensionColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Timeline Dimension Colour"
                         },
-                        "showtotals": {
+                        "showData": {
+                            "type": { "bool": true },
+                            "displayName": "Show Values In Grid"
+                        },
+                        "showTotals": {
                             "type": { "bool": true },
                             "displayName": "Show Totals"
                         },
-                        "totalscolor": {
+                        "totalsColor": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Totals Colour"
                         }
