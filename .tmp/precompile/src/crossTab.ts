@@ -58,12 +58,12 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                 }*/
             },
             dataPoint: {
-                defaultColor: <DataViewObjectPropertyIdentifier>{ 
-                    objectName: 'dataPoint', 
+                defaultColor: <DataViewObjectPropertyIdentifier>{
+                    objectName: 'dataPoint',
                     propertyName: 'defaultColor' },
-                fill: <DataViewObjectPropertyIdentifier>{ 
-                    objectName: 'dataPoint', 
-                    propertyName: 'fill' 
+                fill: <DataViewObjectPropertyIdentifier>{
+                    objectName: 'dataPoint',
+                    propertyName: 'fill'
                 },
                 value:<DataViewObjectPropertyIdentifier>{
                     objectName:'dataPoint',
@@ -95,7 +95,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
         //private margin: IMargin = { left: 10, right: 10, bottom: 15, top: 15 };
         private margin: any = { left: 10, right: 10, bottom: 15, top: 15 };
         private animationDuration: number = 1000;
-        
+
         private dataViews: DataView[];
         private chartData: any;
 
@@ -117,7 +117,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             || !dataView.categorical.values)
                 return { datapoints:null };
 
-            //var categoryValueFormatter: IValueFormatter;	
+            //var categoryValueFormatter: IValueFormatter;
             //var legendValueFormatter: IValueFormatter;
             var dataPoints: CrossTabDataPoint[] = [];
             var catMetaData = dataView.metadata;
@@ -129,7 +129,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             var k, id, categoryX, categoryY, values;
 
             //var formatStringProp = CrossTab.Properties.general.formatString;
-            
+
             var dataViewMetadata: DataViewMetadata = dataView.metadata;
 
             let categorical = dataView.categorical;
@@ -138,7 +138,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
 
             let dataMax: number;
 
-            //fill X-Axis        
+            //fill X-Axis
             for (var i:number = 0; i < dataView.categorical.categories[0].values.length; i++) {
                 catX.push(dataView.categorical.categories[0].values[i]);
             }
@@ -166,7 +166,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                             timelineDimension:false,
                             value: null,
                             //identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], i).withMeasure(dataView.categorical.values[i].source.queryName).withSeries(categorical.values, categorical.values[i]).createSelectionId(),
-                            identity: host.createSelectionIdBuilder().withSeries(categorical.values, categorical.values[i]).createSelectionId(),
+                            identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], j).withSeries(categorical.values, categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
                             fill:null,
                             isTotal:false,
                             selected:false
@@ -190,7 +190,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                                     datapoint.borderDimension = true;
                                 } else if (dataView.categorical.values[i + 1].source.roles['TimelineDimension'] === true) {
                                     datapoint.timelineDimension = true;
-                                }                               
+                                }
                             }
                         }
 
@@ -202,7 +202,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                                     datapoint.borderDimension = true;
                                 } else if (dataView.categorical.values[i + 2].source.roles['TimelineDimension'] === true) {
                                     datapoint.timelineDimension = true;
-                                }                               
+                                }
                             }
                         }
 
@@ -214,14 +214,14 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                                     datapoint.borderDimension = true;
                                 } else if (dataView.categorical.values[i + 3].source.roles['TimelineDimension'] === true) {
                                     datapoint.timelineDimension = true;
-                                }                               
+                                }
                             }
                         }
 
                          dataPoints.push(datapoint);
                     }
 
-                        
+
                     //add total datapoint at the end of the x-axis
 
                     if (showTotals) {
@@ -243,26 +243,33 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             }
 
             if (showTotals) {
-                for (var n:number = 0; n < dataView.categorical.values[0].values.length; n++) {  //this allows us to loop through all of the x-axis columns at the different levels in the arrays
-                    var yTotal:number = 0;
-                    for (var i:number = 0; i < dataView.categorical.values.length; i++) {
-                        if (dataView.categorical.values[i].values && dataView.categorical.values[i].values[n] !== undefined) {
-                            yTotal += dataView.categorical.values[i].values[n];
-                        } 
-                    }
+              var rowCount:number = 0;
+              for (var j:number = 0; j < dataView.categorical.values.length; j++) { // count number of rows; all types of values will be here so only count one type of values
+                if (dataView.categorical.values[j].source.displayName === "TaskPercentComplete") {
+                  rowCount++;
+                }
+              }
 
-                    dataPoints.push({
-                        categoryY: 'Total',
-                        categoryX: dataView.categorical.categories[0].values[n],
-                        overrideDimension:false,
-                        borderDimension:false,
-                        timelineDimension:false,
-                        value: Math.round(yTotal / dataView.categorical.values.length),
-                        identity: null,
-                        fill:null,
-                        isTotal:true,
-                        selected:false
-                    });
+              for (var n:number = 0; n < dataView.categorical.values[0].values.length; n++) {  //this allows us to loop through all of the x-axis columns at the different levels in the arrays
+                  var yTotal:number = 0;
+                  for (var i:number = 0; i < dataView.categorical.values.length; i++) {
+                    if (dataView.categorical.values[i].source.displayName === "TaskPercentComplete") {
+                        yTotal += dataView.categorical.values[i].values[n];
+                      }
+                  }
+
+                  dataPoints.push({
+                      categoryY: 'Total',
+                      categoryX: dataView.categorical.categories[0].values[n],
+                      overrideDimension:false,
+                      borderDimension:false,
+                      timelineDimension:false,
+                      value: Math.round(yTotal / rowCount),
+                      identity: null,
+                      fill:null,
+                      isTotal:true,
+                      selected:false
+                  });
                 }
             }
 
@@ -270,7 +277,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                 catX.push('Total');
                 catY.push('Total');
             }
-            
+
             return {
                 dataPoints: dataPoints,
                 categoryX: catX.filter(function (n) { return n !== undefined; }),
@@ -310,9 +317,9 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             this.mainGraphics = this.svg;
 
             this.setViewportSize(options.viewport);
-            this.updateInternal(options);  
-                    
-            this.setSVGSize(options.viewport);  
+            this.updateInternal(options);
+
+            this.setSVGSize(options.viewport);
         }
 
         private updateInternal(options: VisualUpdateOptions): void {
@@ -322,9 +329,9 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             var overrideDimensionColor = this.overrideDimensionColor = this.getOverrideDimensionColor(dataView);
             var borderDimensionColor = this.borderDimensionColor = this.getBorderDimensionColor(dataView);
             var timelineDimensionColor = this.timelineDimensionColor = this.getTimelineDimensionColor(dataView);
-        
+
             var chartData = this.chartData = CrossTab.visualTransform(dataView, this.host, showTotals);
-                   
+
             //var suppressAnimations = Boolean(options.suppressAnimations);
 
             if (chartData.dataPoints) {
@@ -341,67 +348,73 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                 var legendElementHeight = gridSizeHeight / 2;
 
                 var xOffset = gridSizeWidth + this.margin.left;
-                var yOffset = this.margin.top;
+                var yOffset = this.margin.bottom;
 
                 var dicColor = this.dicColor = [];
-                this.getColors(dataView); 
-                
+                this.getColors(dataView);
+
                 this.mainGraphics.selectAll(".categoryYLabel")
                     .data(chartData.categoryY)
                     .enter().append("text")
-                    .text(<any>function (d) { 
-                        return d; 
+                    .text(<any>function (d) {
+                        return d;
                     })
-                    .attr("dy", ".71em")
+                    .attr("dy", "1.1em")
                     //.attr("x", xOffset)
                     .attr("x", this.margin.left)
-                    .attr("y", function (d, i) { 
-                        return  (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth; 
+                    .attr("y", function (d, i) {
+                        return  (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth;
                      })
-                    .style("text-anchor", "start")
-                    .attr("transform", "translate(-6," + gridSizeHeight + ")")
+                    .style("text-anchor", "end")
+                    .attr("transform", "translate(40," + gridSizeHeight + ")")
                     .attr("class", "categoryYLabel mono axis")
                     .style("font-size","6pt");
 
 
-                
-           
+
+
                 //this.mainGraphics.selectAll(".categoryYLabel")
                 //     .call(this.wrap, gridSizeWidth);
-              
+
                 this.mainGraphics.selectAll(".categoryYLabel")
                     .each(function() { categoryXTextWidth = Math.max(categoryXTextWidth, this.getComputedTextLength()); });
-                        
+
                 this.mainGraphics.selectAll(".categoryXLabel")
                     .data(chartData.categoryX)
                     .enter().append("text")
-                    .text(<any>function (d) { 
+                    .text(<any>function (d) {
                         return d;
                     })
-                    .attr("transform", function(d, i) { 
+                    .attr("transform", function(d, i) {
                           var deg = -90;
                           var cx = this.getComputedTextLength() / 2;
                           var cy = 20;
-                          return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + (0) + ")rotate(" + deg + "," + 0 + "," + yOffset + ")";
+                          return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + categoryYTextWidth + ")rotate(" + deg + "," + 0 + "," + yOffset + ")";
                      } )
-                    .style("text-anchor","end") 
+                    .style("text-anchor","start")
                     .attr("startOffset","100%")
                     .attr("dy", "-.5em")
                     .attr("class", "categoryXLabel mono axis");
-                    
+
 
                 //this.truncateTextIfNeeded(this.mainGraphics.selectAll(".categoryXLabel"), 200);
-                
+
                 //calculate categoryYTextWidth
                 this.mainGraphics.selectAll(".categoryXLabel")
                     .each(function() { categoryYTextWidth = Math.max(categoryYTextWidth, this.getComputedTextLength()); });
-               
-               //re-apply categoryYTextWidth to CategoryYLabel
+
+                //re-apply categoryYTextWidth to CategoryYLabel
                 this.mainGraphics.selectAll(".categoryYLabel")
-                    .attr("y", function (d, i) { 
-                        return  (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth; 
-                     })
-                     
+                    .attr("y", function (d, i) {
+                        return  (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth;
+                      })
+
+                //re-apply categoryYTextWidth to categoryXLabel
+                this.mainGraphics.selectAll(".categoryXLabel")
+                    .attr("transform", function(d, i) {
+                      return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + categoryYTextWidth + ")rotate(" + "-90" + "," + 0 + "," + yOffset + ")";
+                    })
+
                 //we need to wait until we have computed the category axis text widths before setting the svg size:
                 this.svgSize.width = (gridSizeWidth * (chartData.categoryX.length + 1)) + categoryXTextWidth;
                 this.svgSize.height = (gridSizeHeight * (chartData.categoryY.length + 1)) + categoryYTextWidth;
@@ -409,7 +422,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                 {
                     this.svgSize.height += gridSizeHeight + yOffset * 2;
                 }
-                
+
                 var selectionManager = this.selectionManager;
 
                 var crosstab = this.mainGraphics.selectAll(".categoryX")
@@ -422,13 +435,13 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     .attr("height", gridSizeHeight - 1)
                     .attr("rx", 4)
                     .attr("ry", 4)
-                    .style("stroke", function (d:CrossTabDataPoint, i) { 
+                    .style("stroke", function (d:CrossTabDataPoint, i) {
                         return d.borderDimension == true ? borderDimensionColor : 'White';
                     })
                     .style("stroke-width", 1)
                     .style("fill", '#E8E8E8')
 
-                
+
                 var currentX = 0, currentY = 0;
                 var crosstab3 = this.mainGraphics.selectAll(".timelineDimension")
                     .data(chartData.dataPoints)
@@ -438,14 +451,15 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                         return d.timelineDimension == true ? "visible" : "hidden";
                     })
                     .style("stroke", function(d:CrossTabDataPoint, i) { return timelineDimensionColor })  // colour the line
+                    .attr("stroke-width", function(d:CrossTabDataPoint, i) { return 4})
                     .attr("x1", function (d:CrossTabDataPoint, i) { return ((chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the first end of the line
                     .attr("y1", function (d:CrossTabDataPoint, i) { return ((chartData.categoryY.indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })      // y position of the first end of the line
                     .attr("x2", function (d:CrossTabDataPoint, i) { return ((chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the second end of the line
                     .attr("y2", function (d:CrossTabDataPoint, i) { return (((chartData.categoryY.indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + 28; });
 
                     d3.selectAll("line[visibility=hidden]").remove();
-                  
-                function getColor(val, isTotal:boolean, overrideDimension:boolean, borderDimension:boolean, timelineDimension:boolean) { 
+
+                function getColor(val, isTotal:boolean, overrideDimension:boolean, borderDimension:boolean, timelineDimension:boolean) {
                       if (overrideDimension) {
                           return overrideDimensionColor;
                       } else if (isTotal) {
@@ -454,12 +468,12 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                           return dicColor[val].solid.color;
                       } else {
                           return '#E8E8E8';
-                      }                   
+                      }
                 }
-                
+
                 var elementAnimation: any = this.getAnimationMode(crosstab, true);
                 elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal, d.overrideDimension, d.borderDimension, d.timelineDimension) });
-                
+
                 var crosstab1 = this.mainGraphics.selectAll(".categoryX")
                 .on('mouseover', function (d:CrossTabDataPoint) {
                     d3.select(this).transition()
@@ -467,8 +481,8 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                         .duration(1000)
                         .attr("rx", 8)
                         .attr('ry', 8)
-                        
-                    
+
+
                     mouseover(d.categoryX, d.categoryY);
                     (<Event>d3.event).stopPropagation();
                 })
@@ -482,32 +496,30 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     (<Event>d3.event).stopPropagation();
                 })
                 .on('click', function (d:CrossTabDataPoint) {
-                    if (d.selected) {
-                        d3.selectAll(".categoryX").style('opacity', 1);  
+                    if (d.selected && !d.isTotal) { // ignore total cells
+                        d3.selectAll(".categoryX").style('opacity', 1);
                         d.selected = false;
-                        selectionManager.clear();            
-                    } else {
+                        selectionManager.clear();
+                    } else if (!d.selected && !d.isTotal) {
                         d3.selectAll(".categoryX").style('opacity', 0.6);
-                        
-                        debugger;
                         selectionManager.select(d.identity).then(ids => d3.select(this).style('opacity', 1));
-                        d.selected = true;   
+                        d.selected = true;
                     }
-                    (<Event>d3.event).stopPropagation();                    
+                    (<Event>d3.event).stopPropagation();
                 })
-                
+
                 function mouseover(categoryX, categoryY) {
                     d3.selectAll(".categoryXLabel").classed("active", function(d, i) { return d == categoryX });
                     d3.selectAll(".categoryYLabel").classed("active", function(d, i) { return d == categoryY });
                   }
-                
+
                   function mouseout() {
                     d3.selectAll("text").classed("active", false);
                   }
 
                 var showDataInRect = this.getShowData(dataView);
 
-            
+
                 if (showDataInRect) {
                     this.mainGraphics.selectAll(".rectValue")
                         .data(chartData.dataPoints)
@@ -589,7 +601,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             }
             return '#000';
         }*/
-        
+
         private setViewportSize(viewport: IViewport): void {
             var height: number,
                 width: number;
@@ -667,9 +679,9 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             return element.transition().duration(this.animationDuration);
         }
 
-       
-        
-        
+
+
+
         private getColors(dataView: DataView): void {
             if (dataView) {
                 var objects = dataView.metadata.objects;
@@ -679,14 +691,14 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                         for (var i = 0; i <= 10; i++) {
                            if (general['color' + i] && general['color' + i + 'Val']) {
                                 this.dicColor[general['color' + i + 'Val']] = general['color' + i];
-                           } 
+                           }
                         }
-                             
+
                     }
                 }
             }
         }
-        
+
         private getColor(dataView: DataView, colorNum: string): string {
             if (dataView) {
                 var objects = dataView.metadata.objects;
@@ -695,7 +707,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     if (general) {
                        if (general['color' + colorNum]) {
                            return general['color' + colorNum];
-                       }       
+                       }
                     }
                 }
             }
@@ -710,7 +722,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     if (general) {
                        if (general['totalsColor']) {
                            return general['totalsColor'].solid.color;
-                       }       
+                       }
                     }
                 }
             }
@@ -725,7 +737,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     if (general) {
                        if (general['overrideDimensionColor']) {
                            return general['overrideDimensionColor'].solid.color;
-                       }       
+                       }
                     }
                 }
             }
@@ -740,7 +752,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     if (general) {
                        if (general['borderDimensionColor']) {
                            return general['borderDimensionColor'].solid.color;
-                       }       
+                       }
                     }
                 }
             }
@@ -755,13 +767,13 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     if (general) {
                        if (general['timelineDimensionColor']) {
                            return general['timelineDimensionColor'].solid.color;
-                       }       
+                       }
                     }
                 }
             }
             return '#FF6363';
         }
-        
+
         private getColorVal(dataView: DataView, colorNum: string): number {
             if (dataView) {
                 var objects = dataView.metadata.objects;
@@ -770,13 +782,13 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     if (general) {
                        if (general['color' + colorNum + 'Val']) {
                            return general['color' + colorNum + 'Val'];
-                       }       
+                       }
                     }
                 }
             }
             return null;
         }
-        
+
         private getLegendVal(dataView: DataView, colorNum: string): number {
             if (dataView) {
                 var objects = dataView.metadata.objects;
@@ -785,7 +797,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                     if (general) {
                        if (general['color' + colorNum + 'LegendVal']) {
                            return general['color' + colorNum + 'LegendVal'];
-                       }       
+                       }
                     }
                 }
             }
@@ -806,7 +818,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
         }
 
         private getShowLegend(dataView: DataView): boolean {
-    
+
            if (dataView) {
                 var objects = dataView.metadata.objects;
                 if (objects) {
@@ -820,7 +832,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
         }
 
         private getShowTotals(dataView: DataView): boolean {
-    
+
            if (dataView) {
                 var objects = dataView.metadata.objects;
                 if (objects) {
@@ -832,13 +844,13 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             }
             return false;
         }
-        
+
        public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
             var instances: VisualObjectInstance[] = [];
             var dataView = this.dataView;
             var objectName = options.objectName;
-            
-        
+
+
             switch (options.objectName) {
                 case 'general':
                     instances.push({
@@ -848,7 +860,7 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                         properties: {
                             color1:this.getColor(dataView, '1'),
                             color1Val:this.getColorVal(dataView, '1'),
-                            //color1LegendVal:this.getLegendVal(dataView, '1'),               
+                            //color1LegendVal:this.getLegendVal(dataView, '1'),
                             color2:this.getColor(dataView, '2'),
                             color2Val:this.getColorVal(dataView, '2'),
                             //color2LegendVal:this.getLegendVal(dataView, '2'),
@@ -888,12 +900,12 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
             }
              return instances;
         }
-        
+
         private enumerateDataPoints(instances: VisualObjectInstance[], options: EnumerateVisualObjectInstancesOptions): void {
             var data = this.chartData;
                 if (!data)
                     return;
-                var dicInstanceValues = []; 
+                var dicInstanceValues = [];
                 var seriesCount = data.dataPoints.length;
                     /*enumeration.pushInstance({
                         objectName: 'dataPoint',
@@ -912,11 +924,11 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                         var seriesDataPoints = data.dataPoints[i];
                         if (seriesDataPoints.value !== undefined || seriesDataPoints.value !== null) {
                             if (!(this.dicColor[seriesDataPoints.value])) {
-                                //add it to colors 
+                                //add it to colors
                                 this.dicColor[seriesDataPoints.value] = (seriesDataPoints.fill) ? seriesDataPoints.fill : '#E8E8E8';
                             }
-                            
-                            if (!(dicInstanceValues[seriesDataPoints.value])) {    
+
+                            if (!(dicInstanceValues[seriesDataPoints.value])) {
                                 instances.push({
                                     objectName: 'dataPoint',
                                     displayName: seriesDataPoints.value.toString(),
@@ -927,10 +939,10 @@ module powerbi.extensibility.visual.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 
                                 });
                                 dicInstanceValues[seriesDataPoints.value] = seriesDataPoints.fill;
                             }
-                        
-                        
+
+
                         }
-                  
+
                     }*/
         }
     }
