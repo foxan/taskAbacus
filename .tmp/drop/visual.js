@@ -72,7 +72,7 @@ var powerbi;
                             || !dataView.categorical.categories[0].source
                             || !dataView.categorical.values)
                             return { datapoints: null };
-                        //var categoryValueFormatter: IValueFormatter;	
+                        //var categoryValueFormatter: IValueFormatter;
                         //var legendValueFormatter: IValueFormatter;
                         var dataPoints = [];
                         var catMetaData = dataView.metadata;
@@ -87,7 +87,7 @@ var powerbi;
                         var category = categorical.categories[0];
                         var dataValue = categorical.values[0];
                         var dataMax;
-                        //fill X-Axis        
+                        //fill X-Axis
                         for (var i = 0; i < dataView.categorical.categories[0].values.length; i++) {
                             catX.push(dataView.categorical.categories[0].values[i]);
                         }
@@ -110,7 +110,7 @@ var powerbi;
                                         timelineDimension: false,
                                         value: null,
                                         //identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], i).withMeasure(dataView.categorical.values[i].source.queryName).withSeries(categorical.values, categorical.values[i]).createSelectionId(),
-                                        identity: host.createSelectionIdBuilder().withSeries(categorical.values, categorical.values[i]).createSelectionId(),
+                                        identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], j).withSeries(categorical.values, categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
                                         fill: null,
                                         isTotal: false,
                                         selected: false
@@ -183,10 +183,16 @@ var powerbi;
                             }
                         }
                         if (showTotals) {
+                            var rowCount = 0;
+                            for (var j = 0; j < dataView.categorical.values.length; j++) {
+                                if (dataView.categorical.values[j].source.displayName === "TaskPercentComplete") {
+                                    rowCount++;
+                                }
+                            }
                             for (var n = 0; n < dataView.categorical.values[0].values.length; n++) {
                                 var yTotal = 0;
                                 for (var i = 0; i < dataView.categorical.values.length; i++) {
-                                    if (dataView.categorical.values[i].values && dataView.categorical.values[i].values[n] !== undefined) {
+                                    if (dataView.categorical.values[i].source.displayName === "TaskPercentComplete") {
                                         yTotal += dataView.categorical.values[i].values[n];
                                     }
                                 }
@@ -196,7 +202,7 @@ var powerbi;
                                     overrideDimension: false,
                                     borderDimension: false,
                                     timelineDimension: false,
-                                    value: Math.round(yTotal / dataView.categorical.values.length),
+                                    value: Math.round(yTotal / rowCount),
                                     identity: null,
                                     fill: null,
                                     isTotal: true,
@@ -242,7 +248,7 @@ var powerbi;
                             var legendElementWidth = gridSizeWidth;
                             var legendElementHeight = gridSizeHeight / 2;
                             var xOffset = gridSizeWidth + this.margin.left;
-                            var yOffset = this.margin.top;
+                            var yOffset = this.margin.bottom;
                             var dicColor = this.dicColor = [];
                             this.getColors(dataView);
                             this.mainGraphics.selectAll(".categoryYLabel")
@@ -251,13 +257,13 @@ var powerbi;
                                 .text(function (d) {
                                 return d;
                             })
-                                .attr("dy", ".71em")
+                                .attr("dy", "1.1em")
                                 .attr("x", this.margin.left)
                                 .attr("y", function (d, i) {
                                 return (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth;
                             })
-                                .style("text-anchor", "start")
-                                .attr("transform", "translate(-6," + gridSizeHeight + ")")
+                                .style("text-anchor", "end")
+                                .attr("transform", "translate(40," + gridSizeHeight + ")")
                                 .attr("class", "categoryYLabel mono axis")
                                 .style("font-size", "6pt");
                             //this.mainGraphics.selectAll(".categoryYLabel")
@@ -274,9 +280,9 @@ var powerbi;
                                 var deg = -90;
                                 var cx = this.getComputedTextLength() / 2;
                                 var cy = 20;
-                                return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + (0) + ")rotate(" + deg + "," + 0 + "," + yOffset + ")";
+                                return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + categoryYTextWidth + ")rotate(" + deg + "," + 0 + "," + yOffset + ")";
                             })
-                                .style("text-anchor", "end")
+                                .style("text-anchor", "start")
                                 .attr("startOffset", "100%")
                                 .attr("dy", "-.5em")
                                 .attr("class", "categoryXLabel mono axis");
@@ -288,6 +294,11 @@ var powerbi;
                             this.mainGraphics.selectAll(".categoryYLabel")
                                 .attr("y", function (d, i) {
                                 return (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth;
+                            });
+                            //re-apply categoryYTextWidth to categoryXLabel
+                            this.mainGraphics.selectAll(".categoryXLabel")
+                                .attr("transform", function (d, i) {
+                                return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + categoryYTextWidth + ")rotate(" + "-90" + "," + 0 + "," + yOffset + ")";
                             });
                             //we need to wait until we have computed the category axis text widths before setting the svg size:
                             this.svgSize.width = (gridSizeWidth * (chartData.categoryX.length + 1)) + categoryXTextWidth;
@@ -320,6 +331,7 @@ var powerbi;
                                 return d.timelineDimension == true ? "visible" : "hidden";
                             })
                                 .style("stroke", function (d, i) { return timelineDimensionColor; }) // colour the line
+                                .attr("stroke-width", function (d, i) { return 4; })
                                 .attr("x1", function (d, i) { return ((chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; }) // x position of the first end of the line
                                 .attr("y1", function (d, i) { return ((chartData.categoryY.indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; }) // y position of the first end of the line
                                 .attr("x2", function (d, i) { return ((chartData.categoryX.indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; }) // x position of the second end of the line
@@ -362,14 +374,13 @@ var powerbi;
                             })
                                 .on('click', function (d) {
                                 var _this = this;
-                                if (d.selected) {
+                                if (d.selected && !d.isTotal) {
                                     d3.selectAll(".categoryX").style('opacity', 1);
                                     d.selected = false;
                                     selectionManager.clear();
                                 }
-                                else {
+                                else if (!d.selected && !d.isTotal) {
                                     d3.selectAll(".categoryX").style('opacity', 0.6);
-                                    debugger;
                                     selectionManager.select(d.identity).then(function (ids) { return d3.select(_this).style('opacity', 1); });
                                     d.selected = true;
                                 }
@@ -649,7 +660,7 @@ var powerbi;
                                     properties: {
                                         color1: this.getColor(dataView, '1'),
                                         color1Val: this.getColorVal(dataView, '1'),
-                                        //color1LegendVal:this.getLegendVal(dataView, '1'),               
+                                        //color1LegendVal:this.getLegendVal(dataView, '1'),
                                         color2: this.getColor(dataView, '2'),
                                         color2Val: this.getColorVal(dataView, '2'),
                                         //color2LegendVal:this.getLegendVal(dataView, '2'),
@@ -715,7 +726,7 @@ var powerbi;
                                     //add it to colors
                                     this.dicColor[seriesDataPoints.value] = (seriesDataPoints.fill) ? seriesDataPoints.fill : '#E8E8E8';
                                 }
-                                
+    
                                 if (!(dicInstanceValues[seriesDataPoints.value])) {
                                     instances.push({
                                         objectName: 'dataPoint',
@@ -727,10 +738,10 @@ var powerbi;
                                     });
                                     dicInstanceValues[seriesDataPoints.value] = seriesDataPoints.fill;
                                 }
-                            
-                            
+    
+    
                             }
-                      
+    
                         }*/
                     };
                     CrossTab.Properties = {
@@ -768,8 +779,8 @@ var powerbi;
     (function (visuals) {
         var plugins;
         (function (plugins) {
-            plugins.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77 = {
-                name: 'PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77',
+            plugins.PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77_DEBUG = {
+                name: 'PBI_CV_522F2011_DD5A_44D2_A8ED_456F3931DF77_DEBUG',
                 displayName: 'CrossTab',
                 class: 'CrossTab',
                 version: '1.0.0',
