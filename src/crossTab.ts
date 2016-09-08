@@ -408,6 +408,7 @@ module powerbi.extensibility.visual {
                     .attr("y", function (d, i) {
                         return  (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth;
                       })
+                    .attr("transform", "translate(" + categoryXTextWidth + "," + gridSizeHeight + ")")
 
                 //re-apply categoryYTextWidth to categoryXLabel
                 this.mainGraphics.selectAll(".categoryXLabel")
