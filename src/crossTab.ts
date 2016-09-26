@@ -31,14 +31,15 @@ module powerbi.extensibility.visual {
     export interface CrossTabDataPoint {
         categoryX: string;
         categoryY: string;
-        overrideDimension:boolean;
+        overrideDimension1:boolean;
+        overrideDimension2:boolean;
         borderDimension:boolean;
         timelineDimension:boolean;
         value: number;
         identity: ISelectionId;
-        fill:string,
-        isTotal:boolean,
-        selected:boolean
+        fill:string;
+        isTotal:boolean;
+        selected:boolean;
     }
     export interface ISvgSize {
         width: number;
@@ -88,7 +89,8 @@ module powerbi.extensibility.visual {
         private dataView: DataView;
         private dicColor = [];
         private totalsColor = '#5E5E5E';
-        private overrideDimensionColor = '#FF6363';
+        private overrideDimension1Color = '#FF6363';
+        private overrideDimension2Color = '#FF6363';
         private borderDimensionColor = '#FF6363';
         private timelineDimensionColor = '#0033FF';
         private viewport: IViewport;
@@ -106,7 +108,7 @@ module powerbi.extensibility.visual {
             this.updateCount = 0;
         }*/
 
-        public static visualTransform(dataView: DataView, host: IVisualHost, showTotals:boolean): any {
+        public static visualTransform(dataView: DataView, host: IVisualHost, showTotals:boolean, totalXTitle: string, totalYTitle: string): any {
             // no category - nothing to display
 
             if (!dataView
@@ -125,7 +127,6 @@ module powerbi.extensibility.visual {
             var catX: string[] = [];
             var catY: string[] = [];
 
-            var data: CrossTabDataPoint[];
             var k, id, categoryX, categoryY, values;
 
             //var formatStringProp = CrossTab.Properties.general.formatString;
@@ -161,7 +162,8 @@ module powerbi.extensibility.visual {
                         var datapoint = {
                             categoryY: yAxis,
                             categoryX: catX[j],
-                            overrideDimension:false,
+                            overrideDimension1:false,
+                            overrideDimension2:false,
                             borderDimension:false,
                             timelineDimension:false,
                             value: null,
@@ -184,8 +186,10 @@ module powerbi.extensibility.visual {
                         //the override dimension should replace the background colour. This can be used for a concept of 'late' or something else that should override the colour based on the supplied value. (Optional)
                         if (dataView.categorical.values[i + 1] && dataView.categorical.values[i + 1].values[j]) {
                             if (dataView.categorical.values[i + 1].values[j] === 1 && dataView.categorical.values[i + 1].source.groupName === dataView.categorical.values[i].source.groupName) {
-                                if (dataView.categorical.values[i + 1].source.roles['OverrideDimension'] === true) {
-                                    datapoint.overrideDimension = true;
+                                if (dataView.categorical.values[i + 1].source.roles['OverrideDimension1'] === true) {
+                                    datapoint.overrideDimension1 = true;
+                                } else if (dataView.categorical.values[i + 1].source.roles['OverrideDimension2'] === true) {
+                                    datapoint.overrideDimension2 = true;
                                 } else if (dataView.categorical.values[i + 1].source.roles['BorderDimension'] === true) {
                                     datapoint.borderDimension = true;
                                 } else if (dataView.categorical.values[i + 1].source.roles['TimelineDimension'] === true) {
@@ -196,8 +200,10 @@ module powerbi.extensibility.visual {
 
                         if (dataView.categorical.values[i + 2] && dataView.categorical.values[i + 2].values[j]) {
                             if (dataView.categorical.values[i + 2].values[j] === 1 && dataView.categorical.values[i + 2].source.groupName === dataView.categorical.values[i].source.groupName) {
-                                if (dataView.categorical.values[i + 2].source.roles['OverrideDimension'] === true) {
-                                    datapoint.overrideDimension = true;
+                                if (dataView.categorical.values[i + 2].source.roles['OverrideDimension1'] === true) {
+                                    datapoint.overrideDimension1 = true;
+                                } else if (dataView.categorical.values[i + 2].source.roles['OverrideDimension2'] === true) {
+                                    datapoint.overrideDimension2 = true;
                                 } else if (dataView.categorical.values[i + 2].source.roles['BorderDimension'] === true) {
                                     datapoint.borderDimension = true;
                                 } else if (dataView.categorical.values[i + 2].source.roles['TimelineDimension'] === true) {
@@ -208,8 +214,10 @@ module powerbi.extensibility.visual {
 
                         if (dataView.categorical.values[i + 3] && dataView.categorical.values[i + 3].values[j]) {
                             if (dataView.categorical.values[i + 3].values[j] === 1 && dataView.categorical.values[i + 3].source.groupName === dataView.categorical.values[i].source.groupName) {
-                                if (dataView.categorical.values[i + 3].source.roles['OverrideDimension'] === true) {
-                                    datapoint.overrideDimension = true;
+                                if (dataView.categorical.values[i + 3].source.roles['OverrideDimension1'] === true) {
+                                    datapoint.overrideDimension1 = true;
+                                } else if (dataView.categorical.values[i + 3].source.roles['OverrideDimension2'] === true) {
+                                    datapoint.overrideDimension2 = true;
                                 } else if (dataView.categorical.values[i + 3].source.roles['BorderDimension'] === true) {
                                     datapoint.borderDimension = true;
                                 } else if (dataView.categorical.values[i + 3].source.roles['TimelineDimension'] === true) {
@@ -218,17 +226,31 @@ module powerbi.extensibility.visual {
                             }
                         }
 
-                         dataPoints.push(datapoint);
-                    }
+                        if (dataView.categorical.values[i + 4] && dataView.categorical.values[i + 4].values[j]) {
+                            if (dataView.categorical.values[i + 4].values[j] === 1 && dataView.categorical.values[i + 4].source.groupName === dataView.categorical.values[i].source.groupName) {
+                                if (dataView.categorical.values[i + 4].source.roles['OverrideDimension1'] === true) {
+                                    datapoint.overrideDimension1 = true;
+                                } else if (dataView.categorical.values[i + 4].source.roles['OverrideDimension2'] === true) {
+                                    datapoint.overrideDimension2 = true;
+                                } else if (dataView.categorical.values[i + 4].source.roles['BorderDimension'] === true) {
+                                    datapoint.borderDimension = true;
+                                } else if (dataView.categorical.values[i + 4].source.roles['TimelineDimension'] === true) {
+                                    datapoint.timelineDimension = true;
+                                }
+                            }
+                        }
 
+                        dataPoints.push(datapoint);
+                    }
 
                     //add total datapoint at the end of the x-axis
 
                     if (showTotals) {
                         dataPoints.push({
                             categoryY: yAxis,
-                            categoryX: 'Total',
-                            overrideDimension:false,
+                            categoryX: totalXTitle,
+                            overrideDimension1:false,
+                            overrideDimension2:false,
                             borderDimension:false,
                             timelineDimension:false,
                             value: Math.round(xTotal / dataView.categorical.values[i].values.length),
@@ -259,9 +281,10 @@ module powerbi.extensibility.visual {
                   }
 
                   dataPoints.push({
-                      categoryY: 'Total',
+                      categoryY: totalYTitle,
                       categoryX: dataView.categorical.categories[0].values[n],
-                      overrideDimension:false,
+                      overrideDimension1:false,
+                      overrideDimension2:false,
                       borderDimension:false,
                       timelineDimension:false,
                       value: Math.round(yTotal / rowCount),
@@ -274,8 +297,8 @@ module powerbi.extensibility.visual {
             }
 
             if (showTotals) {
-                catX.push('Total');
-                catY.push('Total');
+                catX.push(totalXTitle);
+                catY.push(totalYTitle);
             }
 
             return {
@@ -325,12 +348,15 @@ module powerbi.extensibility.visual {
         private updateInternal(options: VisualUpdateOptions): void {
             var dataView = this.dataView = options.dataViews[0];
             var showTotals = this.getShowTotals(options.dataViews[0]);
+            var totalXTitle = this.getTotalXTitle(dataView);
+            var totalYTitle = this.getTotalYTitle(dataView);
             var totalsColor = this.totalsColor = this.getTotalsColor(dataView);
-            var overrideDimensionColor = this.overrideDimensionColor = this.getOverrideDimensionColor(dataView);
+            var overrideDimension1Color = this.overrideDimension1Color = this.getOverrideDimension1Color(dataView);
+            var overrideDimension2Color = this.overrideDimension2Color = this.getOverrideDimension2Color(dataView);
             var borderDimensionColor = this.borderDimensionColor = this.getBorderDimensionColor(dataView);
             var timelineDimensionColor = this.timelineDimensionColor = this.getTimelineDimensionColor(dataView);
 
-            var chartData = this.chartData = CrossTab.visualTransform(dataView, this.host, showTotals);
+            var chartData = this.chartData = CrossTab.visualTransform(dataView, this.host, showTotals, totalXTitle, totalYTitle);
 
             //var suppressAnimations = Boolean(options.suppressAnimations);
 
@@ -370,9 +396,6 @@ module powerbi.extensibility.visual {
                     .attr("class", "categoryYLabel mono axis")
                     .style("font-size","6pt");
 
-
-
-
                 //this.mainGraphics.selectAll(".categoryYLabel")
                 //     .call(this.wrap, gridSizeWidth);
 
@@ -381,7 +404,8 @@ module powerbi.extensibility.visual {
 
                 this.mainGraphics.selectAll(".categoryXLabel")
                     .data(chartData.categoryX)
-                    .enter().append("text")
+                    .enter()
+                    .append("text")
                     .text(<any>function (d) {
                         return d;
                     })
@@ -396,7 +420,6 @@ module powerbi.extensibility.visual {
                     .attr("dy", "-.5em")
                     .attr("class", "categoryXLabel mono axis");
 
-
                 //this.truncateTextIfNeeded(this.mainGraphics.selectAll(".categoryXLabel"), 200);
 
                 //calculate categoryYTextWidth
@@ -408,7 +431,7 @@ module powerbi.extensibility.visual {
                     .attr("y", function (d, i) {
                         return  (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth;
                       })
-                    .attr("transform", "translate(" + categoryXTextWidth + "," + gridSizeHeight + ")")
+                    .attr("transform", "translate(" + (categoryXTextWidth + 10) + "," + gridSizeHeight + ")")
 
                 //re-apply categoryYTextWidth to categoryXLabel
                 this.mainGraphics.selectAll(".categoryXLabel")
@@ -460,9 +483,11 @@ module powerbi.extensibility.visual {
 
                     d3.selectAll("line[visibility=hidden]").remove();
 
-                function getColor(val, isTotal:boolean, overrideDimension:boolean, borderDimension:boolean, timelineDimension:boolean) {
-                      if (overrideDimension) {
-                          return overrideDimensionColor;
+                function getColor(val, isTotal:boolean, overrideDimension1:boolean, overrideDimension2:boolean, borderDimension:boolean, timelineDimension:boolean) {
+                      if (overrideDimension1) {
+                          return overrideDimension1Color;
+                      } else if (overrideDimension2) {
+                          return overrideDimension2Color;
                       } else if (isTotal) {
                           return totalsColor;
                       } else if (dicColor[val]) {
@@ -473,7 +498,7 @@ module powerbi.extensibility.visual {
                 }
 
                 var elementAnimation: any = this.getAnimationMode(crosstab, true);
-                elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal, d.overrideDimension, d.borderDimension, d.timelineDimension) });
+                elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal, d.overrideDimension1, d.overrideDimension2, d.borderDimension, d.timelineDimension) });
 
                 var crosstab1 = this.mainGraphics.selectAll(".categoryX")
                 .on('mouseover', function (d:CrossTabDataPoint) {
@@ -730,14 +755,29 @@ module powerbi.extensibility.visual {
             return '#5E5E5E';
         }
 
-        private getOverrideDimensionColor(dataView:DataView):string {
+        private getOverrideDimension1Color(dataView:DataView):string {
             if (dataView) {
                 var objects = dataView.metadata.objects;
                 if (objects) {
                     var general = objects['general'];
                     if (general) {
-                       if (general['overrideDimensionColor']) {
-                           return general['overrideDimensionColor'].solid.color;
+                       if (general['overrideDimension1Color']) {
+                           return general['overrideDimension1Color'].solid.color;
+                       }
+                    }
+                }
+            }
+            return '#FF6363';
+        }
+
+        private getOverrideDimension2Color(dataView:DataView):string {
+            if (dataView) {
+                var objects = dataView.metadata.objects;
+                if (objects) {
+                    var general = objects['general'];
+                    if (general) {
+                       if (general['overrideDimension2Color']) {
+                           return general['overrideDimension2Color'].solid.color;
                        }
                     }
                 }
@@ -846,6 +886,34 @@ module powerbi.extensibility.visual {
             return false;
         }
 
+        private getTotalXTitle(dataView: DataView): string {
+
+           if (dataView) {
+                var objects = dataView.metadata.objects;
+                if (objects) {
+                    var general = objects['general'];
+                    if (general) {
+                        return general['totalXTitle'];
+                    }
+                }
+            }
+            return 'Total';
+        }
+
+        private getTotalYTitle(dataView: DataView): string {
+
+           if (dataView) {
+                var objects = dataView.metadata.objects;
+                if (objects) {
+                    var general = objects['general'];
+                    if (general) {
+                        return general['totalYTitle'];
+                    }
+                }
+            }
+            return 'Total';
+        }
+
        public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
             var instances: VisualObjectInstance[] = [];
             var dataView = this.dataView;
@@ -884,12 +952,15 @@ module powerbi.extensibility.visual {
                             color9Val:this.getColorVal(dataView, '9'),
                             color10:this.getColor(dataView, '10'),
                             color10Val:this.getColorVal(dataView, '10'),
-                            overrideDimensionColor:this.getOverrideDimensionColor(dataView),
+                            overrideDimension1Color:this.getOverrideDimension1Color(dataView),
+                            overrideDimension2Color:this.getOverrideDimension2Color(dataView),
                             borderDimensionColor:this.getBorderDimensionColor(dataView),
                             timelineDimensionColor:this.getTimelineDimensionColor(dataView),
                             showData: this.getShowData(dataView),
                             showLegend: this.getShowLegend(dataView),
                             showTotals: this.getShowTotals(dataView),
+                            totalXTitle: this.getTotalXTitle(dataView),
+                            totalYTitle: this.getTotalYTitle(dataView),
                             totalsColor: this.getTotalsColor(dataView)
                         }
                     });

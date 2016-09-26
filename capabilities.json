@@ -16,9 +16,14 @@
                     "displayName":"Values"
                 },
                 {
-                    "name": "OverrideDimension",
+                    "name": "OverrideDimension1",
                     "kind": 1,
-                    "displayName": "Override Dimension"
+                    "displayName": "Override Dimension 1"
+                },
+                {
+                    "name": "OverrideDimension2",
+                    "kind": 1,
+                    "displayName": "Override Dimension 2"
                 },
                 {
                     "name": "BorderDimension",
@@ -31,10 +36,10 @@
                     "displayName": "Timeline Dimension"
                 }
             ],
-            "dataViewMappings": [                
-            { 
+            "dataViewMappings": [
+            {
                     "conditions": [],
-                    "categorical": {                         
+                    "categorical": {
                         "categories": {
                             "for": { "in": "XAxis" }
                         },
@@ -48,7 +53,12 @@
                                     },
                                     {
                                         "for": {
-                                            "in": "OverrideDimension"
+                                            "in": "OverrideDimension1"
+                                        }
+                                    },
+                                    {
+                                        "for": {
+                                            "in": "OverrideDimension2"
                                         }
                                     },
                                     {
@@ -66,7 +76,7 @@
                             "dataReductionAlgorithm": { "top": {} }
                         }
                     }
-                }
+            }
             ],
             "objects": {
                 "general": {
@@ -152,9 +162,13 @@
                             "type": { "numeric": true },
                             "displayName": "Colour 10 Value"
                         },
-                        "overrideDimensionColor": {
+                        "overrideDimension1Color": {
                             "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Override Dimension Colour"
+                            "displayName": "Override Dimension 1 Colour"
+                        },
+                        "overrideDimension2Color": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Override Dimension 2 Colour"
                         },
                         "borderDimensionColor": {
                             "type": { "fill": { "solid": { "color": true } } },
@@ -171,6 +185,14 @@
                         "showTotals": {
                             "type": { "bool": true },
                             "displayName": "Show Totals"
+                        },
+                        "totalXTitle": {
+                            "type": { "text": true },
+                            "displayName": "X-Axis Total Title"
+                        },
+                        "totalYTitle": {
+                            "type": { "text": true },
+                            "displayName": "Y-Axis Total Title"
                         },
                         "totalsColor": {
                             "type": { "fill": { "solid": { "color": true } } },
