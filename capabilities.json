@@ -16,6 +16,16 @@
                     "displayName":"Values"
                 },
                 {
+                    "name": "YAxisHighlight",
+                    "kind": 1,
+                    "displayName": "Y-Axis Highlight"
+                },
+                {
+                    "name": "XAxisHighlight",
+                    "kind": 1,
+                    "displayName": "X-Axis Highlight"
+                },
+                {
                     "name": "OverrideDimension1",
                     "kind": 1,
                     "displayName": "Override Dimension 1"
@@ -49,6 +59,16 @@
                                 "select": [{
                                         "for": {
                                             "in": "Values"
+                                        }
+                                    },
+                                    {
+                                        "for": {
+                                            "in": "YAxisHighlight"
+                                        }
+                                    },
+                                    {
+                                        "for": {
+                                            "in": "XAxisHighlight"
                                         }
                                     },
                                     {
@@ -161,6 +181,14 @@
                         "color10Val": {
                             "type": { "numeric": true },
                             "displayName": "Colour 10 Value"
+                        },
+                        "XAxisHighlightColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "X-Axis Highlight Colour"
+                        },
+                        "YAxisHighlightColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Y-Axis Highlight Colour"
                         },
                         "overrideDimension1Color": {
                             "type": { "fill": { "solid": { "color": true } } },
