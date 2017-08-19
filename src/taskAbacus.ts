@@ -111,6 +111,8 @@ module powerbi.extensibility.visual {
         private dataViews: DataView[];
         private chartData: any;
 
+         private tooltipServiceWrapper: ITooltipServiceWrapper;
+
 
         /*constructor(options: VisualConstructorOptions) {
             console.log('Visual constructor', options);
@@ -354,6 +356,11 @@ module powerbi.extensibility.visual {
                 .attr("class", "svgTaskAbacus")
                 .attr("height", this.svgSize.height)
                 .attr("width", this.svgSize.width);
+
+            this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
+            this.tooltipServiceWrapper.addTooltip(this.TaskAbacus.selectAll('.dataPoint'), 
+                (tooltipEvent: TooltipEventArgs<number>) => TaskAbacus.getTooltipData(tooltipEvent.data),
+                (tooltipEvent: TooltipEventArgs<number>) => null);
 
             this.selectionManager = options.host.createSelectionManager();
         }
@@ -705,6 +712,14 @@ module powerbi.extensibility.visual {
             }
             return '#000';
         }*/
+
+        private static getTooltipData(value: any): VisualTooltipDataItem[] {
+             return [{
+                 displayName: value.category,
+                 value: value.value.toString(),
+                 color: value.color
+             }];
+         }
 
         private setViewportSize(viewport: IViewport): void {
             var height: number,
