@@ -437,7 +437,7 @@ module powerbi.extensibility.visual {
                 this.mainGraphics.selectAll(".categoryYLabel")
                     .each(function() { categoryXTextWidth = Math.max(categoryXTextWidth, this.getComputedTextLength()); });
 
-                this.mainGraphics.select("#XLabel")
+                /*this.mainGraphics.select("#XLabel")
                     .selectAll(".categoryXLabel")
                     .data(chartData.categoryX)
                     .enter()
@@ -454,7 +454,7 @@ module powerbi.extensibility.visual {
                     .style("text-anchor","start")
                     .attr("startOffset","100%")
                     .attr("dy", "-.5em")
-                    .attr("class", "categoryXLabel mono axis");
+                    .attr("class", "categoryXLabel mono axis");*/
 
                 //this.truncateTextIfNeeded(this.mainGraphics.selectAll(".categoryXLabel"), 200);
 
@@ -470,13 +470,13 @@ module powerbi.extensibility.visual {
                     .attr("transform", "translate(" + (categoryXTextWidth + 10) + "," + gridSizeHeight + ")")
 
                 //re-apply categoryYTextWidth to categoryXLabel
-                this.mainGraphics.selectAll(".categoryXLabel")
+                /*this.mainGraphics.selectAll(".categoryXLabel")
                     .attr("transform", function(d, i) {
                       return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + categoryYTextWidth + ")rotate(" + "-90" + "," + 0 + "," + yOffset + ")";
-                    })
+                    })*/
 
                 // add X-Axis Highlight
-                this.mainGraphics.select("#XHighlight")
+               /* this.mainGraphics.select("#XHighlight")
                     .selectAll(".categoryXHighlight")
                     .data(chartData.categoryX)
                     .enter()
@@ -492,7 +492,7 @@ module powerbi.extensibility.visual {
                     })
                     .attr("startOffset","100%")
                     .attr("dy", "-.5em")
-                    .attr("class", "categoryXHighlight mono axis");
+                    .attr("class", "categoryXHighlight mono axis");*/
 
                 // add Y-Axis Highlight
                 this.mainGraphics.select("#YHighlight")
