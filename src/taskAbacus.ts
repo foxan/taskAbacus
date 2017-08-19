@@ -27,7 +27,7 @@
 module powerbi.extensibility.visual {
      //import ValueFormatter = powerbi.visuals.valueFormatter;
 
-    export interface CrossTabDataPoint {
+    export interface TaskAbacusDataPoint {
         categoryX: string;
         categoryY: string;
         overrideDimension1: boolean;
@@ -46,17 +46,17 @@ module powerbi.extensibility.visual {
         height: number;
     }
 
-    export interface CrossTabCategoryX {
+    export interface TaskAbacusCategoryX {
       label: string;
       highlight: number;
     }
 
-    export interface CrossTabCategoryY {
+    export interface TaskAbacusCategoryY {
       label: string;
       highlight: number;
     }
 
-    export class CrossTab implements IVisual {
+    export class TaskAbacus implements IVisual {
         private static Properties: any = {
           general: {
               formatString: <DataViewObjectPropertyIdentifier>{
@@ -131,13 +131,13 @@ module powerbi.extensibility.visual {
 
             //var categoryValueFormatter: IValueFormatter;
             //var legendValueFormatter: IValueFormatter;
-            var dataPoints: CrossTabDataPoint[] = [];
-            var catX: CrossTabCategoryX[] = [];
-            var catY: CrossTabCategoryY[] = [];
+            var dataPoints: TaskAbacusDataPoint[] = [];
+            var catX: TaskAbacusCategoryX[] = [];
+            var catY: TaskAbacusCategoryY[] = [];
 
             var k, id, categoryX, categoryY, values;
 
-            //var formatStringProp = CrossTab.Properties.general.formatString;
+            //var formatStringProp = TaskAbacus.Properties.general.formatString;
 
             let categorical = dataView.categorical;
             let category = categorical.categories[0];
@@ -351,7 +351,7 @@ module powerbi.extensibility.visual {
 
             this.svg = this.svgDiv
                 .append('svg')
-                .attr("class", "svgCrossTab")
+                .attr("class", "svgTaskAbacus")
                 .attr("height", this.svgSize.height)
                 .attr("width", this.svgSize.width);
 
@@ -384,13 +384,13 @@ module powerbi.extensibility.visual {
             var borderDimensionColor = this.borderDimensionColor = this.getBorderDimensionColor(dataView);
             var timelineDimensionColor = this.timelineDimensionColor = this.getTimelineDimensionColor(dataView);
 
-            var chartData = this.chartData = CrossTab.visualTransform(dataView, this.host, showTotals, totalXTitle, totalYTitle);
+            var chartData = this.chartData = TaskAbacus.visualTransform(dataView, this.host, showTotals, totalXTitle, totalYTitle);
 
             //var suppressAnimations = Boolean(options.suppressAnimations);
 
             if (chartData.dataPoints) {
-                var minDataValue = d3.min(chartData.dataPoints, function (d: CrossTabDataPoint) { return d.value; });
-                var maxDataValue = d3.max(chartData.dataPoints, function (d: CrossTabDataPoint) { return d.value; });
+                var minDataValue = d3.min(chartData.dataPoints, function (d: TaskAbacusDataPoint) { return d.value; });
+                var maxDataValue = d3.max(chartData.dataPoints, function (d: TaskAbacusDataPoint) { return d.value; });
 
                 //calculate the max length of the categoryX/Y columns as we cannot compute the width until after it's rendered
                 var categoryXTextLength = 1, categoryYTextLength = 1, categoryXTextWidth = 10, categoryYTextWidth = 10;
@@ -528,14 +528,14 @@ module powerbi.extensibility.visual {
                     .data(chartData.dataPoints)
                     .enter()
                     .append("rect")
-                    .attr("x", function (d:CrossTabDataPoint, i) { return (chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10); })
-                    .attr("y", function (d:CrossTabDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })
+                    .attr("x", function (d:TaskAbacusDataPoint, i) { return (chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10); })
+                    .attr("y", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })
                     .attr("class", "dataPoint bordered")
                     .attr("width", gridSizeWidth - 1)
                     .attr("height", gridSizeHeight - 1)
                     .attr("rx", 4)
                     .attr("ry", 4)
-                    .style("stroke", function (d:CrossTabDataPoint, i) {
+                    .style("stroke", function (d:TaskAbacusDataPoint, i) {
                         return d.borderDimension == true ? borderDimensionColor : 'White';
                     })
                     .style("stroke-width", 1)
@@ -547,15 +547,15 @@ module powerbi.extensibility.visual {
                     .data(chartData.dataPoints)
                     .enter()
                     .append("line")
-                    .attr("visibility", function (d:CrossTabDataPoint, i) {
+                    .attr("visibility", function (d:TaskAbacusDataPoint, i) {
                         return d.timelineDimension == true ? "visible" : "hidden";
                     })
-                    .style("stroke", function(d:CrossTabDataPoint, i) { return timelineDimensionColor })  // colour the line
-                    .attr("stroke-width", function(d:CrossTabDataPoint, i) { return 4})
-                    .attr("x1", function (d:CrossTabDataPoint, i) { return ((chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the first end of the line
-                    .attr("y1", function (d:CrossTabDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })      // y position of the first end of the line
-                    .attr("x2", function (d:CrossTabDataPoint, i) { return ((chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the second end of the line
-                    .attr("y2", function (d:CrossTabDataPoint, i) { return (((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + 28; });
+                    .style("stroke", function(d:TaskAbacusDataPoint, i) { return timelineDimensionColor })  // colour the line
+                    .attr("stroke-width", function(d:TaskAbacusDataPoint, i) { return 4})
+                    .attr("x1", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the first end of the line
+                    .attr("y1", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })      // y position of the first end of the line
+                    .attr("x2", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the second end of the line
+                    .attr("y2", function (d:TaskAbacusDataPoint, i) { return (((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + 28; });
 
                     d3.selectAll("line[visibility=hidden]").remove();
 
@@ -578,7 +578,7 @@ module powerbi.extensibility.visual {
                 elementAnimation.style("fill", function (d) { return getColor(d.value, d.isTotal, d.overrideDimension1, d.overrideDimension2, d.borderDimension, d.timelineDimension) });
 
                 var crosstab1 = this.mainGraphics.selectAll(".dataPoint")
-                .on('mouseover', function (d:CrossTabDataPoint) {
+                .on('mouseover', function (d:TaskAbacusDataPoint) {
                     d3.select(this).transition()
                         .ease("elastic")
                         .duration(1000)
@@ -589,7 +589,7 @@ module powerbi.extensibility.visual {
                     mouseover(d.categoryX, d.categoryY);
                     (<Event>d3.event).stopPropagation();
                 })
-                .on('mouseout', function (d:CrossTabDataPoint) {
+                .on('mouseout', function (d:TaskAbacusDataPoint) {
                     d3.select(this).transition()
                         .ease("elastic")
                         .duration(1000)
@@ -598,7 +598,7 @@ module powerbi.extensibility.visual {
                     mouseout();
                     (<Event>d3.event).stopPropagation();
                 })
-                .on('click', function (d:CrossTabDataPoint) {
+                .on('click', function (d:TaskAbacusDataPoint) {
                     if (d.selected && !d.isTotal) { // ignore total cells
                         d3.selectAll(".dataPoint").style('opacity', 1);
                         d.selected = false;
@@ -628,8 +628,8 @@ module powerbi.extensibility.visual {
                         .data(chartData.dataPoints)
                         .enter()
                         .append("text")
-                        .attr("x", function (d: CrossTabDataPoint, i) { return (chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + categoryXTextWidth - 25; })
-                        .attr("y", function (d: CrossTabDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.75) * gridSizeHeight + yOffset) + categoryYTextWidth - 2; })
+                        .attr("x", function (d: TaskAbacusDataPoint, i) { return (chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + categoryXTextWidth - 25; })
+                        .attr("y", function (d: TaskAbacusDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.75) * gridSizeHeight + yOffset) + categoryYTextWidth - 2; })
                         .attr("dy", "1.81em")
                         .style("text-anchor", "middle")
                         .style("fill", "White")

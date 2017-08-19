@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "name": "crosstab",
+  "name": "taskAbacus",
   "dependencies": {
     "d3": "^3.5.5"
   }
