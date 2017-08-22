@@ -160,24 +160,26 @@ module powerbi.extensibility.visual {
 
                 var p = dataView.matrix.rows.root.children[i].values;
                 for (var key in p) {
-                    var datapoint = {
-                            categoryY: dataView.matrix.rows.root.children[i].value.toString(),
-                            categoryX:null, // catX[j].label,
-                            x:parseInt(key),
-                            y:i,
-                            overrideDimension1:false,
-                            overrideDimension2:false,
-                            borderDimension:false,
-                            timelineDimension:false,
-                            value: null,
-                            identity: null, //host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
-                            fill:null,
-                            isTotal:false,
-                            selected:false
-                        };
-                        datapoint.value = p[key].value;
+                    if (p[key].value !== null) {
+                        var datapoint = {
+                                categoryY: dataView.matrix.rows.root.children[i].value.toString(),
+                                categoryX:null, // catX[j].label,
+                                x:parseInt(key),
+                                y:i,
+                                overrideDimension1:false,
+                                overrideDimension2:false,
+                                borderDimension:false,
+                                timelineDimension:false,
+                                value: null,
+                                identity: null, //host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
+                                fill:null,
+                                isTotal:false,
+                                selected:false
+                            };
+                            datapoint.value = p[key].value;
 
-                    dataPoints.push(datapoint);
+                        dataPoints.push(datapoint);
+                    }
                 }
             }
 
@@ -628,7 +630,7 @@ module powerbi.extensibility.visual {
                         .attr("class", "rectValue mono axis bar-text")
                         .attr("transform", "translate(" + gridSizeHeight + ", -6)")
                         .text(<any>function (d) {
-                            if (d.value) {
+                            if (d.value !== null) {
                                 return d.value.toString();//.substring(0,1)
                             } else {
                                 return null;
