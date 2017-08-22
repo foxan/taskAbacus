@@ -30,6 +30,8 @@ module powerbi.extensibility.visual {
     export interface TaskAbacusDataPoint {
         categoryX: string;
         categoryY: string;
+        x:number;
+        y:number;
         overrideDimension1: boolean;
         overrideDimension2: boolean;
         borderDimension: boolean;
@@ -122,34 +124,61 @@ module powerbi.extensibility.visual {
 
         public static visualTransform(dataView: DataView, host: IVisualHost, showTotals:boolean, totalXTitle: string, totalYTitle: string): any {
             // no category - nothing to display
-
+            debugger;
             if (!dataView
             || !dataView
-            || !dataView.categorical
-            || !dataView.categorical.categories
-            || !dataView.categorical.categories[0].source
-            || !dataView.categorical.values)
+            || !dataView.matrix
+            || !dataView.matrix.rows
+            || !dataView.matrix.rows.root)
                 return { datapoints:null };
 
             //var categoryValueFormatter: IValueFormatter;
             //var legendValueFormatter: IValueFormatter;
             var dataPoints: TaskAbacusDataPoint[] = [];
-            var catX: TaskAbacusCategoryX[] = [];
+            //var catX: TaskAbacusCategoryX[] = [];
             var catY: TaskAbacusCategoryY[] = [];
+            var xLength:number = 0;
 
             var k, id, categoryX, categoryY, values;
 
             //var formatStringProp = TaskAbacus.Properties.general.formatString;
 
-            let categorical = dataView.categorical;
-            let category = categorical.categories[0];
-            let dataValue = categorical.values[0];
+            //let categorical = dataView.categorical;
+            //let category = categorical.categories[0];
+            //let dataValue = categorical.values[0];
 
             // let dataMax: number;
 
-            //fill X-Axis
-            for (var i:number = 0; i < dataView.categorical.categories[0].values.length; i++) {
-                catX.push({label: dataView.categorical.categories[0].values[i].toString(), highlight: null});
+            //fill Y-Axis
+            for (var i:number = 0; i < dataView.matrix.rows.root.children.length; i++) {
+                catY.push({label: dataView.matrix.rows.root.children[i].value.toString(), highlight: null});
+
+                if (i === 0) {
+                    //only do the first time as all rows will have the same length
+                    xLength = TaskAbacus.getLengthOfObject(dataView.matrix.rows.root.children[i].values);
+                }
+
+                var p = dataView.matrix.rows.root.children[i].values;
+                for (var key in p) {
+                    var datapoint = {
+                            categoryY: dataView.matrix.rows.root.children[i].value.toString(),
+                            categoryX:null, // catX[j].label,
+                            x:parseInt(key),
+                            y:i,
+                            overrideDimension1:false,
+                            overrideDimension2:false,
+                            borderDimension:false,
+                            timelineDimension:false,
+                            value: null,
+                            identity: null, //host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
+                            fill:null,
+                            isTotal:false,
+                            selected:false
+                        };
+                        datapoint.value = p[key].value;
+
+                    dataPoints.push(datapoint);
+                }
             }
 
             //fill Y-Axis
@@ -160,7 +189,7 @@ module powerbi.extensibility.visual {
                     var xTotal:number = 0;
 
                     //add Y Category
-                    catY.push({label: yAxis, highlight: null});
+                    //catY.push({label: yAxis, highlight: null});
 
                     //loop through the 'Values' measure to build dataPoints
                     for (var j:number = 0; j < dataView.categorical.values[i].values.length; j++) {
@@ -169,14 +198,15 @@ module powerbi.extensibility.visual {
 
                         var datapoint = {
                             categoryY: yAxis,
-                            categoryX: catX[j].label,
+                            categoryX:null, // catX[j].label,
+                            x:j,
+                            y:i,
                             overrideDimension1:false,
                             overrideDimension2:false,
                             borderDimension:false,
                             timelineDimension:false,
                             value: null,
-                            //identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], i).withMeasure(dataView.categorical.values[i].source.queryName).withSeries(categorical.values, categorical.values[i]).createSelectionId(),
-                            identity: host.createSelectionIdBuilder().withCategory(categorical.categories[0], j).withSeries(categorical.values, categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
+                            identity: null,//host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
                             fill:null,
                             isTotal:false,
                             selected:false
@@ -258,6 +288,8 @@ module powerbi.extensibility.visual {
                         dataPoints.push({
                             categoryY: yAxis,
                             categoryX: totalXTitle,
+                            x:j,
+                            y:i,
                             overrideDimension1:false,
                             overrideDimension2:false,
                             borderDimension:false,
@@ -273,17 +305,17 @@ module powerbi.extensibility.visual {
                 }
               else if (dataView.categorical.values[i].source && dataView.categorical.values[i].source.roles && dataView.categorical.values[i].source.roles['YAxisHighlight']) {
                 //we are in a 'YAxisHighlight' object
-                for (var y:number = 0; y < catY.length; y++) {
+                /*for (var y:number = 0; y < catY.length; y++) {
                   if (dataView.categorical.values[i].source.groupName === catY[y].label) {
                       var v:number = parseInt(dataView.categorical.values[i].values.toString());
                     catY[y].highlight = <number>dataView.categorical.values[i].values.reduce(function(a:number, b:number) { return a + b; }); // dataView.categorical.values[i].values.length;
                   }
-                }
+                }*/
               }
               else if (dataView.categorical.values[i].source && dataView.categorical.values[i].source.roles && dataView.categorical.values[i].source.roles['XAxisHighlight']) {
                 //we are in a 'XAxisHighlight' object
                 for (var x:number = 0; x < dataView.categorical.values[i].values.length; x++) {
-                  catX[x].highlight = <number>dataView.categorical.values[i].values[x];
+                  //catX[x].highlight = <number>dataView.categorical.values[i].values[x];
                 }
               }
             }
@@ -307,6 +339,8 @@ module powerbi.extensibility.visual {
                   dataPoints.push({
                       categoryY: <string>totalYTitle,
                       categoryX: <string>dataView.categorical.categories[0].values[n],
+                      x:j,
+                      y:i,
                       overrideDimension1:false,
                       overrideDimension2:false,
                       borderDimension:false,
@@ -321,23 +355,19 @@ module powerbi.extensibility.visual {
             }
 
             if (showTotals) {
-                catX.push({label: totalXTitle, highlight: null});
+               // catX.push({label: totalXTitle, highlight: null});
                 catY.push({label: totalYTitle, highlight: null});
             }
 
             return {
                 dataPoints: dataPoints,
-                categoryX: catX.filter(function (n) { return n !== undefined; }),
-                categoryY: catY.filter(function (n) { return n !== undefined; }),
-                //categoryValueFormatter: categoryValueFormatter,
-                //legendValueFormatter: legendValueFormatter
+                xLength:xLength,
+                categoryY: catY.filter(function (n) { return n !== undefined; })
             };
         }
 
 
        constructor(options: VisualConstructorOptions) {
-
-           debugger;
 
             this.host = options.host;
 
@@ -358,15 +388,10 @@ module powerbi.extensibility.visual {
                 .attr("width", this.svgSize.width);
 
             this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
-            this.tooltipServiceWrapper.addTooltip(this.TaskAbacus.selectAll('.dataPoint'), 
-                (tooltipEvent: TooltipEventArgs<number>) => TaskAbacus.getTooltipData(tooltipEvent.data),
-                (tooltipEvent: TooltipEventArgs<number>) => null);
-
             this.selectionManager = options.host.createSelectionManager();
         }
 
         public update(options: VisualUpdateOptions): void {
-            debugger;
             if (!options.dataViews || !options.dataViews[0]) return;
             this.svg.selectAll("*").remove();
             this.mainGraphics = this.svg;
@@ -374,11 +399,15 @@ module powerbi.extensibility.visual {
             this.setViewportSize(options.viewport);
             this.updateInternal(options);
 
+            this.tooltipServiceWrapper.addTooltip(this.svgDiv.selectAll('.dataPoint'), 
+                (tooltipEvent: TooltipEventArgs<number>) => TaskAbacus.getTooltipData(tooltipEvent.data),
+                (tooltipEvent: TooltipEventArgs<number>) => null);
+
             this.setSVGSize(options.viewport);
         }
 
         private updateInternal(options: VisualUpdateOptions): void {
-            debugger;
+            //debugger;
             var dataView = this.dataView = options.dataViews[0];
             var showTotals = this.getShowTotals(options.dataViews[0]);
             var totalXTitle = this.totalXTitle = this.getTotalXTitle(dataView);
@@ -415,9 +444,9 @@ module powerbi.extensibility.visual {
                 this.getColors(dataView);
 
                 // pre-set the order of elements
-                this.mainGraphics.append("g").attr("id", "XHighlight");
-                this.mainGraphics.append("g").attr("id", "YHighlight");
-                this.mainGraphics.append("g").attr("id", "XLabel");
+                //this.mainGraphics.append("g").attr("id", "XHighlight");
+                //this.mainGraphics.append("g").attr("id", "YHighlight");
+                //this.mainGraphics.append("g").attr("id", "XLabel");
                 this.mainGraphics.append("g").attr("id", "YLabel");
                 this.mainGraphics.append("g").attr("id", "dataPoint");
 
@@ -444,26 +473,6 @@ module powerbi.extensibility.visual {
                 this.mainGraphics.selectAll(".categoryYLabel")
                     .each(function() { categoryXTextWidth = Math.max(categoryXTextWidth, this.getComputedTextLength()); });
 
-                /*this.mainGraphics.select("#XLabel")
-                    .selectAll(".categoryXLabel")
-                    .data(chartData.categoryX)
-                    .enter()
-                    .append("text")
-                    .text(<any>function (d) {
-                      return d.label;
-                    })
-                    .attr("transform", function(d, i) {
-                          var deg = -90;
-                          var cx = this.getComputedTextLength() / 2;
-                          var cy = 20;
-                          return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + categoryYTextWidth + ")rotate(" + deg + "," + 0 + "," + yOffset + ")";
-                     } )
-                    .style("text-anchor","start")
-                    .attr("startOffset","100%")
-                    .attr("dy", "-.5em")
-                    .attr("class", "categoryXLabel mono axis");*/
-
-                //this.truncateTextIfNeeded(this.mainGraphics.selectAll(".categoryXLabel"), 200);
 
                 //calculate categoryYTextWidth
                 this.mainGraphics.selectAll(".categoryXLabel")
@@ -476,30 +485,6 @@ module powerbi.extensibility.visual {
                       })
                     .attr("transform", "translate(" + (categoryXTextWidth + 10) + "," + gridSizeHeight + ")")
 
-                //re-apply categoryYTextWidth to categoryXLabel
-                /*this.mainGraphics.selectAll(".categoryXLabel")
-                    .attr("transform", function(d, i) {
-                      return "translate(" + (xOffset + categoryXTextWidth + ((i + 1) * gridSizeWidth)) + ", " + categoryYTextWidth + ")rotate(" + "-90" + "," + 0 + "," + yOffset + ")";
-                    })*/
-
-                // add X-Axis Highlight
-               /* this.mainGraphics.select("#XHighlight")
-                    .selectAll(".categoryXHighlight")
-                    .data(chartData.categoryX)
-                    .enter()
-                    .append("rect")
-                    .attr("x", <any>function(d, i) {
-                      return xOffset + categoryXTextWidth + 4 + (i - 0.5) * gridSizeWidth;
-                    })
-                    .attr("y", yOffset)
-                    .attr("width", gridSizeWidth)
-                    .attr("height", categoryYTextWidth + gridSizeHeight / 2)
-                    .style("fill", <any>function(d, i) {
-                      return d.highlight > 0 ? XAxisHighlightColor : "white";
-                    })
-                    .attr("startOffset","100%")
-                    .attr("dy", "-.5em")
-                    .attr("class", "categoryXHighlight mono axis");*/
 
                 // add Y-Axis Highlight
                 this.mainGraphics.select("#YHighlight")
@@ -521,7 +506,7 @@ module powerbi.extensibility.visual {
                     .attr("class", "categoryYHighlight mono axis");
 
                 //we need to wait until we have computed the category axis text widths before setting the svg size:
-                this.svgSize.width = (gridSizeWidth * (chartData.categoryX.length + 1)) + categoryXTextWidth;
+                this.svgSize.width = (gridSizeWidth * (chartData.xLength)) + categoryXTextWidth;
                 this.svgSize.height = (gridSizeHeight * (chartData.categoryY.length + 1)) + categoryYTextWidth;
                 if (showLegend)
                 {
@@ -535,8 +520,8 @@ module powerbi.extensibility.visual {
                     .data(chartData.dataPoints)
                     .enter()
                     .append("rect")
-                    .attr("x", function (d:TaskAbacusDataPoint, i) { return (chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10); })
-                    .attr("y", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })
+                    .attr("x", function (d:TaskAbacusDataPoint, i) { return d.x * gridSizeWidth + xOffset + (categoryXTextWidth - 10); })
+                    .attr("y", function (d:TaskAbacusDataPoint, i) { return ((d.y + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })
                     .attr("class", "dataPoint bordered")
                     .attr("width", gridSizeWidth - 1)
                     .attr("height", gridSizeHeight - 1)
@@ -559,10 +544,10 @@ module powerbi.extensibility.visual {
                     })
                     .style("stroke", function(d:TaskAbacusDataPoint, i) { return timelineDimensionColor })  // colour the line
                     .attr("stroke-width", function(d:TaskAbacusDataPoint, i) { return 4})
-                    .attr("x1", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the first end of the line
-                    .attr("y1", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })      // y position of the first end of the line
-                    .attr("x2", function (d:TaskAbacusDataPoint, i) { return ((chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the second end of the line
-                    .attr("y2", function (d:TaskAbacusDataPoint, i) { return (((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + 28; });
+                    .attr("x1", function (d:TaskAbacusDataPoint, i) { return ((d.x * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the first end of the line
+                    .attr("y1", function (d:TaskAbacusDataPoint, i) { return ((d.y + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })      // y position of the first end of the line
+                    .attr("x2", function (d:TaskAbacusDataPoint, i) { return ((d.x * gridSizeWidth + xOffset) + (categoryXTextWidth - 10)) + 28; })     // x position of the second end of the line
+                    .attr("y2", function (d:TaskAbacusDataPoint, i) { return (((d.y + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + 28; });
 
                     d3.selectAll("line[visibility=hidden]").remove();
 
@@ -635,8 +620,8 @@ module powerbi.extensibility.visual {
                         .data(chartData.dataPoints)
                         .enter()
                         .append("text")
-                        .attr("x", function (d: TaskAbacusDataPoint, i) { return (chartData.categoryX.map(function(e) { return e.label; }).indexOf(d.categoryX) * gridSizeWidth + xOffset) + categoryXTextWidth - 25; })
-                        .attr("y", function (d: TaskAbacusDataPoint, i) { return ((chartData.categoryY.map(function(e) { return e.label; }).indexOf(d.categoryY) + 0.75) * gridSizeHeight + yOffset) + categoryYTextWidth - 2; })
+                        .attr("x", function (d:TaskAbacusDataPoint, i) { return d.x * gridSizeWidth + xOffset + (categoryXTextWidth - 25); })
+                        .attr("y", function (d:TaskAbacusDataPoint, i) { return ((d.y + 0.75) * gridSizeHeight + yOffset) + categoryYTextWidth - 2; })
                         .attr("dy", "1.81em")
                         .style("text-anchor", "middle")
                         .style("fill", "White")
@@ -696,6 +681,24 @@ module powerbi.extensibility.visual {
 
                     legend.exit().remove();*/
                 }
+            } else if (chartData.categoryY) {
+                this.mainGraphics.append("g").attr("id", "YLabel");
+                this.mainGraphics.select("#YLabel")
+                    .selectAll(".categoryYLabel")
+                    .data(chartData.categoryY)
+                    .enter().append("text")
+                    .text(<any>function (d) {
+                        return d.label;
+                    })
+                    .attr("dy", "1.1em")
+                    //.attr("x", xOffset)
+                    .attr("x", this.margin.left)
+                    .attr("y", function (d, i) {
+                        return  (i * gridSizeHeight + (yOffset) / 2.5) + categoryYTextWidth;
+                     })
+                    .style("text-anchor", "end")
+                    .attr("transform", "translate(40," + gridSizeHeight + ")")
+                    .attr("class", "categoryYLabel mono axis");
             }
         }
 
@@ -714,6 +717,7 @@ module powerbi.extensibility.visual {
         }*/
 
         private static getTooltipData(value: any): VisualTooltipDataItem[] {
+            debugger;
              return [{
                  displayName: value.category,
                  value: value.value.toString(),
@@ -1041,6 +1045,16 @@ module powerbi.extensibility.visual {
                 }
             }
             return 'Total';
+        }
+
+        public static getLengthOfObject(object: any):number {
+            var length = 0;
+            for( var key in object ) {
+                if( object.hasOwnProperty(key) ) {
+                    ++length;
+                }
+            }
+            return length;
         }
 
        public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstanceEnumeration {

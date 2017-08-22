@@ -1,14 +1,14 @@
 {
     "dataRoles": [
                 {
-                    "name": "YAxis",
+                    "name": "Rows",
                     "kind": "Grouping",
-                    "displayName":"Y-Axis"
+                    "displayName":"Rows"
                 },
                 {
-                    "name": "XAxis",
+                    "name": "Columns",
                     "kind": "Grouping",
-                    "displayName":"X-Axis"
+                    "displayName":"Columns"
                 },
                 {
                     "name": "Values",
@@ -42,62 +42,33 @@
                 },
                 {
                     "name": "TimelineDimension",
-                    "kind": "Measure",
+                    "kind": "Grouping",
                     "displayName": "Timeline Dimension"
                 }
             ],
-            "dataViewMappings": [
-            {
-                    "conditions": [],
-                    "categorical": {
-                        "categories": {
-                            "for": { "in": "XAxis" }
+            "dataViewMappings": [{
+                    "conditions": [
+                        { "Rows": { "max": 0 }, "Columns": { "max": 0 }, "Values": { "min": 1 } },
+                        { "Rows": { "min": 1 }, "Columns": { "min": 0 }, "Values": { "min": 0 } },
+                        { "Rows": { "min": 0 }, "Columns": { "min": 1 }, "Values": { "min": 0 } }
+                    ],
+                    "matrix": {
+                        "rows": {
+                            "for": { "in": "Rows" },
+                            "dataReductionAlgorithm": { "window": { "count": 500 } }
+                        },
+                        "columns": {
+                            "for": { "in": "Columns" },
+                            "dataReductionAlgorithm": { "top": { "count": 100 } }
                         },
                         "values": {
-                            "group": {
-                                "by": "YAxis",
-                                "select": [{
-                                        "for": {
-                                            "in": "Values"
-                                        }
-                                    },
-                                    {
-                                        "for": {
-                                            "in": "YAxisHighlight"
-                                        }
-                                    },
-                                    {
-                                        "for": {
-                                            "in": "XAxisHighlight"
-                                        }
-                                    },
-                                    {
-                                        "for": {
-                                            "in": "OverrideDimension1"
-                                        }
-                                    },
-                                    {
-                                        "for": {
-                                            "in": "OverrideDimension2"
-                                        }
-                                    },
-                                    {
-                                        "for": {
-                                            "in": "BorderDimension"
-                                        }
-                                    },
-                                    {
-                                        "for": {
-                                            "in": "TimelineDimension"
-                                        }
-                                    }
-                                ]
-                            },
-                            "dataReductionAlgorithm": { "top": {} }
+                            "for": { "in": "Values" } 
+                        },
+                        "timeline": {
+                            "for": { "in": "TimelineDimension" } 
                         }
-                    }
-            }
-            ],
+                    }                     
+            }],
             "objects": {
                 "general": {
                     "displayName": "General",
