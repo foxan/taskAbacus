@@ -6,6 +6,11 @@
                     "displayName":"Rows"
                 },
                 {
+                    "name": "RowSortOrder",
+                    "kind": "Grouping",
+                    "displayName":"Row Sort Order"
+                },
+                {
                     "name": "Columns",
                     "kind": "Grouping",
                     "displayName":"Columns"
@@ -16,58 +21,25 @@
                     "displayName":"Values"
                 },
                 {
-                    "name": "YAxisHighlight",
+                    "name": "ToolTipData",
                     "kind": "Measure",
-                    "displayName": "Y-Axis Highlight"
-                },
-                {
-                    "name": "XAxisHighlight",
-                    "kind": "Measure",
-                    "displayName": "X-Axis Highlight"
-                },
-                {
-                    "name": "OverrideDimension1",
-                    "kind": "Measure",
-                    "displayName": "Override Dimension 1"
-                },
-                {
-                    "name": "OverrideDimension2",
-                    "kind": "Measure",
-                    "displayName": "Override Dimension 2"
-                },
-                {
-                    "name": "BorderDimension",
-                    "kind": "Measure",
-                    "displayName": "Border Dimension"
-                },
-                {
-                    "name": "TimelineDimension",
-                    "kind": "Grouping",
-                    "displayName": "Timeline Dimension"
+                    "displayName": "ToolTip Data"
                 }
             ],
             "dataViewMappings": [{
-                    "conditions": [
-                        { "Rows": { "max": 0 }, "Columns": { "max": 0 }, "Values": { "min": 1 } },
-                        { "Rows": { "min": 1 }, "Columns": { "min": 0 }, "Values": { "min": 0 } },
-                        { "Rows": { "min": 0 }, "Columns": { "min": 1 }, "Values": { "min": 0 } }
-                    ],
-                    "matrix": {
-                        "rows": {
-                            "for": { "in": "Rows" },
-                            "dataReductionAlgorithm": { "window": { "count": 500 } }
-                        },
-                        "columns": {
-                            "for": { "in": "Columns" },
-                            "dataReductionAlgorithm": { "top": { "count": 100 } }
-                        },
-                        "values": {
-                            "for": { "in": "Values" } 
-                        },
-                        "timeline": {
-                            "for": { "in": "TimelineDimension" } 
-                        }
-                    }                     
+                "conditions": [],
+                "table": {
+                    "rows": {
+                        "select":
+                        [
+                            { "bind": { "to": "Columns" } },
+                            { "bind": { "to": "Rows" } },
+                            { "bind": { "to": "RowSortOrder" } },                        
+                            { "bind": { "to": "Values" } },
+                            { "bind": { "to": "ToolTipData" } }
+                        ]
+                    }
+                }
             }],
             "objects": {
                 "general": {
@@ -198,6 +170,16 @@
                             "displayName": "Totals Colour"
                         }
                     }
+                }
+            },
+            "sorting": {
+                "implicit": {
+                    "clauses": [
+                        {
+                            "role": "categories",
+                            "direction": 1
+                        }
+                    ]
                 }
             }
 }

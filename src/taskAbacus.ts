@@ -28,7 +28,6 @@ module powerbi.extensibility.visual {
      //import ValueFormatter = powerbi.visuals.valueFormatter;
 
     export interface TaskAbacusDataPoint {
-        categoryX: string;
         categoryY: string;
         x:number;
         y:number;
@@ -41,6 +40,20 @@ module powerbi.extensibility.visual {
         fill: string;
         isTotal: boolean;
         selected: boolean;
+        tooltipData:string;
+    }
+
+    export interface FieldIndex {
+        rowIndex:number;
+        rowSortOrderIndex:number;
+        columnIndex:number;
+        valueIndex:number;
+        tooltipValueIndexes:[ToolTipValues];
+    }
+
+    export interface ToolTipValues {
+        name:string;
+        index:number;
     }
 
     export interface ISvgSize {
@@ -124,205 +137,156 @@ module powerbi.extensibility.visual {
 
         public static visualTransform(dataView: DataView, host: IVisualHost, showTotals:boolean, totalXTitle: string, totalYTitle: string): any {
             // no category - nothing to display
-            debugger;
             if (!dataView
             || !dataView
-            || !dataView.matrix
-            || !dataView.matrix.rows
-            || !dataView.matrix.rows.root)
+            || !dataView.table
+            || !dataView.table.rows
+            || !dataView.table.rows[0].length)
                 return { datapoints:null };
 
-            //var categoryValueFormatter: IValueFormatter;
-            //var legendValueFormatter: IValueFormatter;
             var dataPoints: TaskAbacusDataPoint[] = [];
-            //var catX: TaskAbacusCategoryX[] = [];
             var catY: TaskAbacusCategoryY[] = [];
+            var currentCatY:string = null;
+            var currentYCount:number = -1; // first should be 0
+            var currentRowSortOrder:any = null;
+            var firstSort:number = null;
+            
+            var yLength:number = 0;
             var xLength:number = 0;
 
             var k, id, categoryX, categoryY, values;
+            var fieldIndex:FieldIndex = {
+                rowIndex:null,
+                rowSortOrderIndex:null,
+                columnIndex:null,
+                valueIndex:null,
+                tooltipValueIndexes:[{
+                    name:null,
+                    index:null
+                }]
+            };
 
-            //var formatStringProp = TaskAbacus.Properties.general.formatString;
 
-            //let categorical = dataView.categorical;
-            //let category = categorical.categories[0];
-            //let dataValue = categorical.values[0];
-
-            // let dataMax: number;
-
-            //fill Y-Axis
-            for (var i:number = 0; i < dataView.matrix.rows.root.children.length; i++) {
-                catY.push({label: dataView.matrix.rows.root.children[i].value.toString(), highlight: null});
-
-                if (i === 0) {
-                    //only do the first time as all rows will have the same length
-                    xLength = TaskAbacus.getLengthOfObject(dataView.matrix.rows.root.children[i].values);
-                }
-
-                var p = dataView.matrix.rows.root.children[i].values;
-                for (var key in p) {
-                    if (p[key].value !== null) {
-                        var datapoint = {
-                                categoryY: dataView.matrix.rows.root.children[i].value.toString(),
-                                categoryX:null, // catX[j].label,
-                                x:parseInt(key),
-                                y:i,
-                                overrideDimension1:false,
-                                overrideDimension2:false,
-                                borderDimension:false,
-                                timelineDimension:false,
-                                value: null,
-                                identity: null, //host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
-                                fill:null,
-                                isTotal:false,
-                                selected:false
-                            };
-                            datapoint.value = p[key].value;
-
-                        dataPoints.push(datapoint);
+            //locate the index of each column
+             for (var i:number = 0; i < dataView.table.columns.length; i++) {
+                if (dataView.table.columns[i].roles['Columns']) {
+                    fieldIndex.columnIndex = i;
+                } else if (dataView.table.columns[i].roles['Rows']) {
+                    fieldIndex.rowIndex = i;
+                } else if (dataView.table.columns[i].roles['Values']) {
+                    fieldIndex.valueIndex = i;
+                } else if (dataView.table.columns[i].roles['RowSortOrder']) {
+                    fieldIndex.rowSortOrderIndex = i;
+                } else if (dataView.table.columns[i].roles['ToolTipData']) {
+                    if (fieldIndex.tooltipValueIndexes[0].index === null) {
+                        //work around, I don't know how to instantiate this object without something being in the array.. :(
+                        fieldIndex.tooltipValueIndexes[0].name = dataView.table.columns[i].displayName;
+                        fieldIndex.tooltipValueIndexes[0].index = i;
+                    } else {
+                        fieldIndex.tooltipValueIndexes.push({name:dataView.table.columns[i].displayName, index:i});
                     }
+                    
                 }
-            }
+             }
+            
+            dataView.table.rows.sort(function(a, b) { 
+                return a[fieldIndex.rowSortOrderIndex] > b[fieldIndex.rowSortOrderIndex] ? 1 : -1;
+            });
+            
+
+             firstSort = <number>dataView.table.rows[0][fieldIndex.columnIndex]
+            
+             for (var i:number = 0; i < dataView.table.rows.length; i++) {
+                 if (dataView.table.rows[i][fieldIndex.columnIndex] === firstSort) {
+                    yLength ++;
+                 } else {
+                     break;
+                 }
+             }
+             
+
+             debugger;
 
             //fill Y-Axis
-            for (var i:number = 0; i < dataView.categorical.values.length; i++) {
-                if (dataView.categorical.values[i].source && dataView.categorical.values[i].source.roles && dataView.categorical.values[i].source.roles['Values']) {
-                    //we are in a 'Values' object
-                    var yAxis:string = dataView.categorical.values[i].source.groupName.toString();
-                    var xTotal:number = 0;
+            for (var i:number = 0; i < dataView.table.rows.length; i++) {
+                
+                var xTotal:number = 0;
+                var y:number = 0;
+                var yAxis:string = dataView.table.rows[i][fieldIndex.rowIndex].toString();
 
                     //add Y Category
-                    //catY.push({label: yAxis, highlight: null});
-
-                    //loop through the 'Values' measure to build dataPoints
-                    for (var j:number = 0; j < dataView.categorical.values[i].values.length; j++) {
-
-                        //some values will be null or not exist. We still want to display a square so return as 0
-
-                        var datapoint = {
-                            categoryY: yAxis,
-                            categoryX:null, // catX[j].label,
-                            x:j,
-                            y:i,
-                            overrideDimension1:false,
-                            overrideDimension2:false,
-                            borderDimension:false,
-                            timelineDimension:false,
-                            value: null,
-                            identity: null,//host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
-                            fill:null,
-                            isTotal:false,
-                            selected:false
-                        };
-
-                        if (dataView.categorical.values[i].values[j]) {
-                            datapoint.value = dataView.categorical.values[i].values[j];
-                        } else {
-                            datapoint.value = 0;
-                        }
-
-                        //add to the x-axis total for this row
-                        xTotal += datapoint.value;
-
-                        //the override dimension should replace the background colour. This can be used for a concept of 'late' or something else that should override the colour based on the supplied value. (Optional)
-                        if (dataView.categorical.values[i + 1] && dataView.categorical.values[i + 1].values[j]) {
-                            if (dataView.categorical.values[i + 1].values[j] === 1 && dataView.categorical.values[i + 1].source.groupName === dataView.categorical.values[i].source.groupName) {
-                                if (dataView.categorical.values[i + 1].source.roles['OverrideDimension1'] === true) {
-                                    datapoint.overrideDimension1 = true;
-                                } else if (dataView.categorical.values[i + 1].source.roles['OverrideDimension2'] === true) {
-                                    datapoint.overrideDimension2 = true;
-                                } else if (dataView.categorical.values[i + 1].source.roles['BorderDimension'] === true) {
-                                    datapoint.borderDimension = true;
-                                } else if (dataView.categorical.values[i + 1].source.roles['TimelineDimension'] === true) {
-                                    datapoint.timelineDimension = true;
-                                }
-                            }
-                        }
-
-                        if (dataView.categorical.values[i + 2] && dataView.categorical.values[i + 2].values[j]) {
-                            if (dataView.categorical.values[i + 2].values[j] === 1 && dataView.categorical.values[i + 2].source.groupName === dataView.categorical.values[i].source.groupName) {
-                                if (dataView.categorical.values[i + 2].source.roles['OverrideDimension1'] === true) {
-                                    datapoint.overrideDimension1 = true;
-                                } else if (dataView.categorical.values[i + 2].source.roles['OverrideDimension2'] === true) {
-                                    datapoint.overrideDimension2 = true;
-                                } else if (dataView.categorical.values[i + 2].source.roles['BorderDimension'] === true) {
-                                    datapoint.borderDimension = true;
-                                } else if (dataView.categorical.values[i + 2].source.roles['TimelineDimension'] === true) {
-                                    datapoint.timelineDimension = true;
-                                }
-                            }
-                        }
-
-                        if (dataView.categorical.values[i + 3] && dataView.categorical.values[i + 3].values[j]) {
-                            if (dataView.categorical.values[i + 3].values[j] === 1 && dataView.categorical.values[i + 3].source.groupName === dataView.categorical.values[i].source.groupName) {
-                                if (dataView.categorical.values[i + 3].source.roles['OverrideDimension1'] === true) {
-                                    datapoint.overrideDimension1 = true;
-                                } else if (dataView.categorical.values[i + 3].source.roles['OverrideDimension2'] === true) {
-                                    datapoint.overrideDimension2 = true;
-                                } else if (dataView.categorical.values[i + 3].source.roles['BorderDimension'] === true) {
-                                    datapoint.borderDimension = true;
-                                } else if (dataView.categorical.values[i + 3].source.roles['TimelineDimension'] === true) {
-                                    datapoint.timelineDimension = true;
-                                }
-                            }
-                        }
-
-                        if (dataView.categorical.values[i + 4] && dataView.categorical.values[i + 4].values[j]) {
-                            if (dataView.categorical.values[i + 4].values[j] === 1 && dataView.categorical.values[i + 4].source.groupName === dataView.categorical.values[i].source.groupName) {
-                                if (dataView.categorical.values[i + 4].source.roles['OverrideDimension1'] === true) {
-                                    datapoint.overrideDimension1 = true;
-                                } else if (dataView.categorical.values[i + 4].source.roles['OverrideDimension2'] === true) {
-                                    datapoint.overrideDimension2 = true;
-                                } else if (dataView.categorical.values[i + 4].source.roles['BorderDimension'] === true) {
-                                    datapoint.borderDimension = true;
-                                } else if (dataView.categorical.values[i + 4].source.roles['TimelineDimension'] === true) {
-                                    datapoint.timelineDimension = true;
-                                }
-                            }
-                        }
-
-                        dataPoints.push(datapoint);
-                    }
-
-
-                    //add total datapoint at the end of the x-axis
-
-                    if (showTotals) {
-                        dataPoints.push({
-                            categoryY: yAxis,
-                            categoryX: totalXTitle,
-                            x:j,
-                            y:i,
-                            overrideDimension1:false,
-                            overrideDimension2:false,
-                            borderDimension:false,
-                            timelineDimension:false,
-                            value: Math.round(xTotal / dataView.categorical.values[i].values.length),
-                            identity: null,
-                            fill:null,
-                            isTotal:true,
-                            selected:false
-                        });
-                    }
-
+              //  if (currentCatY !== yAxis && dataView.table.rows[i][fieldIndex.columnIndex] === firstSort) {
+               //     catY.push({label:yAxis, highlight: null});
+              //      currentCatY = yAxis;
+              //  }
+                
+                var columnNo:number = parseInt(<string>dataView.table.rows[i][fieldIndex.columnIndex]);
+                if (columnNo > xLength) {
+                    xLength = columnNo;
+                    //currentYCount = 0; //also reset this
                 }
-              else if (dataView.categorical.values[i].source && dataView.categorical.values[i].source.roles && dataView.categorical.values[i].source.roles['YAxisHighlight']) {
-                //we are in a 'YAxisHighlight' object
-                /*for (var y:number = 0; y < catY.length; y++) {
-                  if (dataView.categorical.values[i].source.groupName === catY[y].label) {
-                      var v:number = parseInt(dataView.categorical.values[i].values.toString());
-                    catY[y].highlight = <number>dataView.categorical.values[i].values.reduce(function(a:number, b:number) { return a + b; }); // dataView.categorical.values[i].values.length;
-                  }
+
+                if (currentRowSortOrder !== dataView.table.rows[i][fieldIndex.rowSortOrderIndex]) {
+                    //add new yAxis label to array
+                    catY.push({label:yAxis, highlight: null});
+                    //reset 
+                    currentRowSortOrder = dataView.table.rows[i][fieldIndex.rowSortOrderIndex];
+                    currentYCount++;
+                }
+
+                var ttd:string = null;
+                if (fieldIndex.tooltipValueIndexes.length > 0) {
+                    ttd =  <string>dataView.table.rows[i][fieldIndex.tooltipValueIndexes[0].index].toString()
+                }
+                
+                dataPoints.push({
+                    categoryY: yAxis,
+                    x:columnNo - 1,
+                    y:currentYCount,
+                    overrideDimension1:false,
+                    overrideDimension2:false,
+                    borderDimension:false,
+                    timelineDimension:false,
+                    value: parseInt(<string>dataView.table.rows[i][fieldIndex.valueIndex]),
+                    identity: null,//host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
+                    fill:null,
+                    isTotal:false,
+                    selected:false,
+                    tooltipData:ttd
+                });
+
+                /*if (currentYCount > yLength) {
+                    currentYCount = 0;
+                } else {
+                    currentYCount ++;
                 }*/
-              }
-              else if (dataView.categorical.values[i].source && dataView.categorical.values[i].source.roles && dataView.categorical.values[i].source.roles['XAxisHighlight']) {
-                //we are in a 'XAxisHighlight' object
-                for (var x:number = 0; x < dataView.categorical.values[i].values.length; x++) {
-                  //catX[x].highlight = <number>dataView.categorical.values[i].values[x];
-                }
-              }
-            }
+                
+                
+                //xTotal += datapoint.value;
 
-            if (showTotals) {
+                //add total datapoint at the end of the x-axis
+
+               /* if (showTotals) {
+                    dataPoints.push({
+                        categoryY: yAxis,
+                        x:j,
+                        y:i,
+                        overrideDimension1:false,
+                        overrideDimension2:false,
+                        borderDimension:false,
+                        timelineDimension:false,
+                        value: Math.round(xTotal / dataView.categorical.values[i].values.length),
+                        identity: null,
+                        fill:null,
+                        isTotal:true,
+                        selected:false
+                    });
+                }*/
+
+        }  
+              
+
+            /*if (showTotals) {
               var rowCount:number = 0;
               for (var j:number = 0; j < dataView.categorical.values.length; j++) { // count number of rows; all types of values will be here so only count one type of values
                 if (dataView.categorical.values[j].source.displayName === "TaskPercentComplete") {
@@ -340,7 +304,6 @@ module powerbi.extensibility.visual {
 
                   dataPoints.push({
                       categoryY: <string>totalYTitle,
-                      categoryX: <string>dataView.categorical.categories[0].values[n],
                       x:j,
                       y:i,
                       overrideDimension1:false,
@@ -351,7 +314,8 @@ module powerbi.extensibility.visual {
                       identity: null,
                       fill:null,
                       isTotal:true,
-                      selected:false
+                      selected:false,
+                      tooltipData:null
                   });
                 }
             }
@@ -360,7 +324,7 @@ module powerbi.extensibility.visual {
                // catX.push({label: totalXTitle, highlight: null});
                 catY.push({label: totalYTitle, highlight: null});
             }
-
+            */
             return {
                 dataPoints: dataPoints,
                 xLength:xLength,
@@ -425,7 +389,7 @@ module powerbi.extensibility.visual {
             var chartData = this.chartData = TaskAbacus.visualTransform(dataView, this.host, showTotals, totalXTitle, totalYTitle);
 
             //var suppressAnimations = Boolean(options.suppressAnimations);
-
+            debugger;
             if (chartData.dataPoints) {
                 var minDataValue = d3.min(chartData.dataPoints, function (d: TaskAbacusDataPoint) { return d.value; });
                 var maxDataValue = d3.max(chartData.dataPoints, function (d: TaskAbacusDataPoint) { return d.value; });
@@ -489,7 +453,7 @@ module powerbi.extensibility.visual {
 
 
                 // add Y-Axis Highlight
-                this.mainGraphics.select("#YHighlight")
+                /*this.mainGraphics.select("#YHighlight")
                     .selectAll(".categoryYHighlight")
                     .data(chartData.categoryY)
                     .enter()
@@ -505,7 +469,7 @@ module powerbi.extensibility.visual {
                     })
                     .attr("startOffset","100%")
                     .attr("dy", "-.5em")
-                    .attr("class", "categoryYHighlight mono axis");
+                    .attr("class", "categoryYHighlight mono axis");*/
 
                 //we need to wait until we have computed the category axis text widths before setting the svg size:
                 this.svgSize.width = (gridSizeWidth * (chartData.xLength)) + categoryXTextWidth;
@@ -522,7 +486,13 @@ module powerbi.extensibility.visual {
                     .data(chartData.dataPoints)
                     .enter()
                     .append("rect")
-                    .attr("x", function (d:TaskAbacusDataPoint, i) { return d.x * gridSizeWidth + xOffset + (categoryXTextWidth - 10); })
+                    .attr("x", function (d:TaskAbacusDataPoint, i) { 
+                        var date1:Date = new Date();
+                        var timestamp:number = date1.getTime();
+                        //console.log('x:' + d.x + ' returnX:' + (d.x * gridSizeWidth + xOffset + (categoryXTextWidth - 10)));
+                        //console.log('y:' + d.y + ' returnY:' + (((d.y + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + ' dateStamp:' + timestamp)
+                        return d.x * gridSizeWidth + xOffset + (categoryXTextWidth - 10); 
+                    })
                     .attr("y", function (d:TaskAbacusDataPoint, i) { return ((d.y + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })
                     .attr("class", "dataPoint bordered")
                     .attr("width", gridSizeWidth - 1)
@@ -580,7 +550,7 @@ module powerbi.extensibility.visual {
                         .attr('ry', 8);
 
 
-                    mouseover(d.categoryX, d.categoryY);
+                    //mouseover(null, d.categoryY);
                     (<Event>d3.event).stopPropagation();
                 })
                 .on('mouseout', function (d:TaskAbacusDataPoint) {
@@ -626,10 +596,10 @@ module powerbi.extensibility.visual {
                         .attr("y", function (d:TaskAbacusDataPoint, i) { return ((d.y + 0.75) * gridSizeHeight + yOffset) + categoryYTextWidth - 2; })
                         .attr("dy", "1.81em")
                         .style("text-anchor", "middle")
-                        .style("fill", "White")
+                        .style("fill", "#1E6F8A")
                         .attr("class", "rectValue mono axis bar-text")
                         .attr("transform", "translate(" + gridSizeHeight + ", -6)")
-                        .text(<any>function (d) {
+                        .text(<any>function (d) {                       
                             if (d.value !== null) {
                                 return d.value.toString();//.substring(0,1)
                             } else {
@@ -719,10 +689,33 @@ module powerbi.extensibility.visual {
         }*/
 
         private static getTooltipData(value: any): VisualTooltipDataItem[] {
-            debugger;
+            var val = value.value.toString();
+            if (val.length > 0) {
+                val += '%';
+            }
              return [{
-                 displayName: value.category,
-                 value: value.value.toString(),
+                 displayName: null,
+                 value: value.categoryY.toString(),
+                 color: value.color
+             },
+             {
+                 displayName: 'Task',
+                 value: value.tooltipData.toString(),
+                 color: value.color
+             },
+             {
+                 displayName: '% Complete',
+                 value: val,
+                 color: value.color
+             },
+             {
+                 displayName: 'X',
+                 value: value.x.toString(),
+                 color: value.color
+             },
+             {
+                 displayName: 'Y',
+                 value: value.y.toString(),
                  color: value.color
              }];
          }

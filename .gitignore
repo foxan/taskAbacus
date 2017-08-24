@@ -3,3 +3,8 @@ node_modules
 dist
 .tmp/*
 .DS_Store
+capabilities.TableWorking.json
+src/taskAbacus.Categorical.ts
+src/taskAbacus.Matrix.ts
+capabilities.Categorical.json
+capabilities.Matrix.json
