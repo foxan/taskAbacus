@@ -52,6 +52,10 @@ module powerbi.extensibility.visual {
         columnName:string;
         valueIndex:number;
         valueName:string;
+        overrideDimension1: number;
+        overrideDimension2: number;
+        borderDimension: number;
+        timelineDimension: number;
         tooltipValueIndexes:[ToolTipValues];
     }
 
@@ -185,6 +189,10 @@ module powerbi.extensibility.visual {
                 columnName:null,
                 valueIndex:null,
                 valueName:null,
+                overrideDimension1:null,
+                overrideDimension2:null,
+                borderDimension:null,
+                timelineDimension:null,
                 tooltipValueIndexes:[{
                     name:null,
                     index:null
@@ -205,6 +213,14 @@ module powerbi.extensibility.visual {
                     fieldIndex.valueName = dataView.table.columns[i].displayName;
                 } else if (dataView.table.columns[i].roles['RowSortOrder']) {
                     fieldIndex.rowSortOrderIndex = i;
+                 } else if (dataView.table.columns[i].roles['OverrideDimension1']) {
+                    fieldIndex.overrideDimension1 = i;
+                 } else if (dataView.table.columns[i].roles['OverrideDimension2']) {
+                    fieldIndex.overrideDimension2 = i;
+                 } else if (dataView.table.columns[i].roles['BorderDimension']) {
+                    fieldIndex.borderDimension = i;
+                 } else if (dataView.table.columns[i].roles['TimelineDimension']) {
+                    fieldIndex.timelineDimension = i;
                 } else if (dataView.table.columns[i].roles['ToolTipData']) {
                     if (fieldIndex.tooltipValueIndexes[0].index === null) {
                         //work around, I don't know how to instantiate this object without something being in the array.. :(
@@ -231,6 +247,8 @@ module powerbi.extensibility.visual {
                 }
             }
              
+
+            debugger;
             //fill Y-Axis
             for (var i:number = 0; i < dataView.table.rows.length; i++) {
                 
@@ -290,10 +308,10 @@ module powerbi.extensibility.visual {
                     categoryY: yAxis,
                     x:currentColumnNo - 1,
                     y:currentYCount,
-                    overrideDimension1:false,
-                    overrideDimension2:false,
-                    borderDimension:false,
-                    timelineDimension:false,
+                    overrideDimension1:<boolean>dataView.table.rows[i][fieldIndex.overrideDimension1],
+                    overrideDimension2:<boolean>dataView.table.rows[i][fieldIndex.overrideDimension2],
+                    borderDimension:<boolean>dataView.table.rows[i][fieldIndex.borderDimension],
+                    timelineDimension:<boolean>dataView.table.rows[i][fieldIndex.timelineDimension],
                     valueName:fieldIndex.valueName,
                     value: parseInt(<string>dataView.table.rows[i][fieldIndex.valueIndex]),
                     identity: null,//host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),

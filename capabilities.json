@@ -28,12 +28,12 @@
                 {
                     "name": "YAxisHighlight",
                     "kind": "Measure",
-                    "displayName": "Y-Axis Highlight"
+                    "displayName": "Y-Axis Highlight (Not implemented)"
                 },
                 {
                     "name": "XAxisHighlight",
                     "kind": "Measure",
-                    "displayName": "X-Axis Highlight"
+                    "displayName": "X-Axis Highlight (Not implemented)"
                 },
                 {
                     "name": "OverrideDimension1",
@@ -66,7 +66,11 @@
                             { "bind": { "to": "Rows" } },
                             { "bind": { "to": "RowSortOrder" } },                        
                             { "bind": { "to": "Values" } },
-                            { "bind": { "to": "ToolTipData" } }
+                            { "bind": { "to": "ToolTipData" } },
+                            { "bind": { "to": "OverrideDimension1" } },
+                            { "bind": { "to": "OverrideDimension2" } },
+                            { "bind": { "to": "BorderDimension" } },
+                            { "bind": { "to": "TimelineDimension" } }
                         ]
                     }
                 }
