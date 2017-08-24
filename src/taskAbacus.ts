@@ -65,6 +65,12 @@ module powerbi.extensibility.visual {
         value:any;
     }
 
+    export interface FillColor {
+        solid:{
+            color:string;
+        }
+    }
+
     export interface ISvgSize {
         width: number;
         height: number;
@@ -118,6 +124,7 @@ module powerbi.extensibility.visual {
         private selectionManager: ISelectionManager;
         private dataView: DataView;
         private dicColor = [];
+        private defaultColor = '#448d86';
         private totalXTitle = 'Total';
         private totalYTitle = 'Total';
         private totalsColor = '#5E5E5E';
@@ -224,8 +231,6 @@ module powerbi.extensibility.visual {
                 }
             }
              
-             debugger;
-
             //fill Y-Axis
             for (var i:number = 0; i < dataView.table.rows.length; i++) {
                 
@@ -302,46 +307,6 @@ module powerbi.extensibility.visual {
 
         }  
               
-
-            /*if (showTotals) {
-              var rowCount:number = 0;
-              for (var j:number = 0; j < dataView.categorical.values.length; j++) { // count number of rows; all types of values will be here so only count one type of values
-                if (dataView.categorical.values[j].source.displayName === "TaskPercentComplete") {
-                  rowCount++;
-                }
-              }
-
-              for (var n:number = 0; n < dataView.categorical.values[0].values.length; n++) {  //this allows us to loop through all of the x-axis columns at the different levels in the arrays
-                  var yTotal:number = 0;
-                  for (var i:number = 0; i < dataView.categorical.values.length; i++) {
-                    if (dataView.categorical.values[i].source.displayName === "TaskPercentComplete") {
-                        yTotal += <number>dataView.categorical.values[i].values[n];
-                      }
-                  }
-
-                  dataPoints.push({
-                      categoryY: <string>totalYTitle,
-                      x:j,
-                      y:i,
-                      overrideDimension1:false,
-                      overrideDimension2:false,
-                      borderDimension:false,
-                      timelineDimension:false,
-                      value: Math.round(yTotal / rowCount),
-                      identity: null,
-                      fill:null,
-                      isTotal:true,
-                      selected:false,
-                      tooltipData:null
-                  });
-                }
-            }
-
-            if (showTotals) {
-               // catX.push({label: totalXTitle, highlight: null});
-                catY.push({label: totalYTitle, highlight: null});
-            }
-            */
             return {
                 dataPoints: dataPoints,
                 xLength:xLength,
@@ -395,6 +360,7 @@ module powerbi.extensibility.visual {
             var showTotals = this.getShowTotals(options.dataViews[0]);
             var totalXTitle = this.totalXTitle = this.getTotalXTitle(dataView);
             var totalYTitle = this.totalYTitle = this.getTotalYTitle(dataView);
+            var defaultColor = this.defaultColor = this.getDefaultColor(dataView);
             var totalsColor = this.totalsColor = this.getTotalsColor(dataView);
             var overrideDimension1Color = this.overrideDimension1Color = this.getOverrideDimension1Color(dataView);
             var overrideDimension2Color = this.overrideDimension2Color = this.getOverrideDimension2Color(dataView);
@@ -406,7 +372,6 @@ module powerbi.extensibility.visual {
             var chartData = this.chartData = TaskAbacus.visualTransform(dataView, this.host, showTotals, totalXTitle, totalYTitle);
 
             //var suppressAnimations = Boolean(options.suppressAnimations);
-            debugger;
             if (chartData.dataPoints) {
                 var minDataValue = d3.min(chartData.dataPoints, function (d: TaskAbacusDataPoint) { return d.value; });
                 var maxDataValue = d3.max(chartData.dataPoints, function (d: TaskAbacusDataPoint) { return d.value; });
@@ -469,25 +434,6 @@ module powerbi.extensibility.visual {
                     .attr("transform", "translate(" + (categoryXTextWidth + 10) + "," + gridSizeHeight + ")")
 
 
-                // add Y-Axis Highlight
-                /*this.mainGraphics.select("#YHighlight")
-                    .selectAll(".categoryYHighlight")
-                    .data(chartData.categoryY)
-                    .enter()
-                    .append("rect")
-                    .attr("x", 0)
-                    .attr("y", <any>function(d, i) {
-                      return yOffset + categoryYTextWidth + (i + 0.5) * gridSizeWidth;
-                    })
-                    .attr("width", categoryXTextWidth + gridSizeWidth)
-                    .attr("height", gridSizeHeight)
-                    .style("fill", <any>function(d, i) {
-                      return d.highlight > 0 ? YAxisHighlightColor : "white";
-                    })
-                    .attr("startOffset","100%")
-                    .attr("dy", "-.5em")
-                    .attr("class", "categoryYHighlight mono axis");*/
-
                 //we need to wait until we have computed the category axis text widths before setting the svg size:
                 this.svgSize.width = (gridSizeWidth * (chartData.xLength)) + categoryXTextWidth;
                 this.svgSize.height = (gridSizeHeight * (chartData.categoryY.length + 1)) + categoryYTextWidth;
@@ -504,10 +450,6 @@ module powerbi.extensibility.visual {
                     .enter()
                     .append("rect")
                     .attr("x", function (d:TaskAbacusDataPoint, i) { 
-                        var date1:Date = new Date();
-                        var timestamp:number = date1.getTime();
-                        //console.log('x:' + d.x + ' returnX:' + (d.x * gridSizeWidth + xOffset + (categoryXTextWidth - 10)));
-                        //console.log('y:' + d.y + ' returnY:' + (((d.y + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth) + ' dateStamp:' + timestamp)
                         return d.x * gridSizeWidth + xOffset + (categoryXTextWidth - 10); 
                     })
                     .attr("y", function (d:TaskAbacusDataPoint, i) { return ((d.y + 0.5) * gridSizeHeight + yOffset) + categoryYTextWidth; })
@@ -550,8 +492,7 @@ module powerbi.extensibility.visual {
                       } else if (dicColor[val]) {
                           return dicColor[val].solid.color;
                       } else {
-                          return '#E8E8E8';
-                          // return '#FFFFFF';
+                          return defaultColor;
                       }
                 };
 
@@ -613,7 +554,7 @@ module powerbi.extensibility.visual {
                         .attr("y", function (d:TaskAbacusDataPoint, i) { return ((d.y + 0.75) * gridSizeHeight + yOffset) + categoryYTextWidth - 2; })
                         .attr("dy", "1.81em")
                         .style("text-anchor", "middle")
-                        .style("fill", "#1E6F8A")
+                        .style("fill", "white")
                         .attr("class", "rectValue mono axis bar-text")
                         .attr("transform", "translate(" + gridSizeHeight + ", -6)")
                         .text(<any>function (d) {                       
@@ -624,15 +565,7 @@ module powerbi.extensibility.visual {
                             }
                         });
                 }
-                else {
-                    crosstab.append("title").text(<any>function (d) {
-                       //return valueFormatter.create({ value: Number(d.value) }).format(Number(d.value));
-                    });
-                }
-
-
                 var showLegend = this.getShowLegend(dataView);
-
                 if (showLegend) {
                    /*var legend = this.mainGraphics.selectAll(".legend")
                         .data([0].concat(colorScale.quantiles()), function (d) { return d; });
@@ -690,20 +623,6 @@ module powerbi.extensibility.visual {
                     .attr("class", "categoryYLabel mono axis");
             }
         }
-
-
-        /*public getColor(val) :string {
-            if(val) {
-                if (val < 5) {
-                    return 'Blue';
-                } else if (val < 10) {
-                    return 'Orange';
-                } else if (val < 20) {
-                    return 'Red';
-                }
-            }
-            return '#000';
-        }*/
 
         private static getTooltipData(value: any): VisualTooltipDataItem[] {
             var tooltipData = [];
@@ -767,43 +686,13 @@ module powerbi.extensibility.visual {
                 TextMeasurementService.svgEllipsis);*/
         }
 
-        /*private wrap(text, width): void {
-            text.each(function () {
-                var text = d3.select(this);
-                var words = text.text().split(/\s+/).reverse();
-                var word;
-                var line = [];
-                var lineNumber = 0;
-                var lineHeight = 1.1; // ems
-                var x = text.attr("x");
-                var y = text.attr("y");
-                var dy = parseFloat(text.attr("dy"));
-                var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
-                while (word = words.pop()) {
-                    line.push(word);
-                    tspan.text(line.join(" "));
-                    var tspannode: any = tspan.node();  //Fixing Typescript error: Property 'getComputedTextLength' does not exist on type 'Element'.
-                    if (tspannode.getComputedTextLength() > width) {
-                        line.pop();
-                        tspan.text(line.join(" "));
-                        line = [word];
-                        tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-                    }
-                }
-            });
-        }*/
-
-
+       
         private getAnimationMode(element:any, suppressAnimations: boolean): any {
             if (suppressAnimations) {
                 return element;
             }
-
             return element.transition().duration(this.animationDuration);
         }
-
-
-
 
         private getColors(dataView: DataView): void {
             if (dataView) {
@@ -812,7 +701,7 @@ module powerbi.extensibility.visual {
                     var general = objects['general'];
                     if (general) {
                         for (var i = 0; i <= 10; i++) {
-                           if (general['color' + i] && general['color' + i + 'Val']) {
+                           if (general['color' + i] && (general['color' + i + 'Val'] !== undefined || general['color' + i + 'Val'] !== null)) {
                                 this.dicColor[<string>general['color' + i + 'Val']] = general['color' + i];
                            }
                         }
@@ -828,7 +717,8 @@ module powerbi.extensibility.visual {
                     var general = objects['general'];
                     if (general) {
                        if (general['color' + colorNum]) {
-                           return <string>general['color' + colorNum];
+                           var col:any = general['color' + colorNum];
+                           return col.solid.color.toString();
                        }
                     }
                 }
@@ -843,8 +733,24 @@ module powerbi.extensibility.visual {
                     var general = objects['general'];
                     if (general) {
                        if (general['totalsColor']) {
-                           //return general['totalsColor'].solid.color;
-                           return <string>general['totalsColor'];
+                           var col:any = general['totalsColor'];
+                           return col.solid.color.toString();                        
+                       }
+                    }
+                }
+            }
+            return '#5E5E5E';
+        }
+
+        private getDefaultColor(dataView: DataView): string {
+            if (dataView) {
+                var objects = dataView.metadata.objects;
+                if (objects) {
+                    var general = objects['general'];
+                    if (general) {
+                       if (general['default1Color']) {
+                           var col:any = general['default1Color'];
+                           return col.solid.color.toString();                        
                        }
                     }
                 }
@@ -859,8 +765,8 @@ module powerbi.extensibility.visual {
                     var general = objects['general'];
                     if (general) {
                        if (general['overrideDimension1Color']) {
-                           //return general['overrideDimension1Color'].solid.color;
-                           return <string>general['overrideDimension1Color'];
+                           var col:any = general['overrideDimension1Color'];
+                           return col.solid.color.toString(); 
                        }
                     }
                 }
@@ -954,7 +860,7 @@ module powerbi.extensibility.visual {
                 if (objects) {
                     var general = objects['general'];
                     if (general) {
-                       if (general['color' + colorNum + 'Val']) {
+                       if (general['color' + colorNum + 'Val'] !== undefined || general['color' + colorNum + 'Val'] !== null) {
                            return <number>general['color' + colorNum + 'Val'];
                        }
                     }
@@ -1069,21 +975,17 @@ module powerbi.extensibility.visual {
                         displayName: 'General',
                         selector: null,
                         properties: {
+                            default1Color:this.getDefaultColor(dataView),
                             color1:this.getColor(dataView, '1'),
                             color1Val:this.getColorVal(dataView, '1'),
-                            //color1LegendVal:this.getLegendVal(dataView, '1'),
                             color2:this.getColor(dataView, '2'),
                             color2Val:this.getColorVal(dataView, '2'),
-                            //color2LegendVal:this.getLegendVal(dataView, '2'),
                             color3:this.getColor(dataView, '3'),
                             color3Val:this.getColorVal(dataView, '3'),
-                            //color3LegendVal:this.getLegendVal(dataView, '3'),
                             color4:this.getColor(dataView, '4'),
                             color4Val:this.getColorVal(dataView, '4'),
-                            //color4LegendVal:this.getLegendVal(dataView, '4'),
                             color5:this.getColor(dataView, '5'),
                             color5Val:this.getColorVal(dataView, '5'),
-                            //color5LegendVal:this.getLegendVal(dataView, '5'),
                             color6:this.getColor(dataView, '6'),
                             color6Val:this.getColorVal(dataView, '6'),
                             color7:this.getColor(dataView, '7'),

@@ -15,7 +15,7 @@
     "email": ""
   },
   "assets": {
-    "icon": "assets/icon.png"
+    "icon": "assets/abacus.png"
   },
   "externalJS": [
     "node_modules/d3/d3.min.js"

@@ -24,6 +24,36 @@
                     "name": "ToolTipData",
                     "kind": "Grouping",
                     "displayName": "ToolTip Data"
+                },
+                {
+                    "name": "YAxisHighlight",
+                    "kind": "Measure",
+                    "displayName": "Y-Axis Highlight"
+                },
+                {
+                    "name": "XAxisHighlight",
+                    "kind": "Measure",
+                    "displayName": "X-Axis Highlight"
+                },
+                {
+                    "name": "OverrideDimension1",
+                    "kind": "Measure",
+                    "displayName": "Override Dimension 1"
+                },
+                {
+                    "name": "OverrideDimension2",
+                    "kind": "Measure",
+                    "displayName": "Override Dimension 2"
+                },
+                {
+                    "name": "BorderDimension",
+                    "kind": "Measure",
+                    "displayName": "Border Dimension"
+                },
+                {
+                    "name": "TimelineDimension",
+                    "kind": "Measure",
+                    "displayName": "Timeline Dimension"
                 }
             ],
             "dataViewMappings": [{
@@ -45,6 +75,10 @@
                 "general": {
                     "displayName": "General",
                     "properties": {
+                        "default1Color": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Default Colour"
+                        },
                         "color1": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Colour 1"
