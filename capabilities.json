@@ -22,7 +22,7 @@
                 },
                 {
                     "name": "ToolTipData",
-                    "kind": "Measure",
+                    "kind": "Grouping",
                     "displayName": "ToolTip Data"
                 }
             ],

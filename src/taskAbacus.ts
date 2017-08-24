@@ -35,25 +35,34 @@ module powerbi.extensibility.visual {
         overrideDimension2: boolean;
         borderDimension: boolean;
         timelineDimension: boolean;
+        valueName:string;
         value: number;
         identity: ISelectionId;
         fill: string;
         isTotal: boolean;
         selected: boolean;
-        tooltipData:string;
+        tooltipData:[ToolTips];
     }
 
     export interface FieldIndex {
         rowIndex:number;
+        rowName:string;
         rowSortOrderIndex:number;
         columnIndex:number;
+        columnName:string;
         valueIndex:number;
+        valueName:string;
         tooltipValueIndexes:[ToolTipValues];
     }
 
     export interface ToolTipValues {
         name:string;
         index:number;
+    }
+
+    export interface ToolTips {
+        name:string;
+        value:any;
     }
 
     export interface ISvgSize {
@@ -149,17 +158,26 @@ module powerbi.extensibility.visual {
             var currentCatY:string = null;
             var currentYCount:number = -1; // first should be 0
             var currentRowSortOrder:any = null;
+            var rowMaxColumnNo:number = null;
             var firstSort:number = null;
             
             var yLength:number = 0;
             var xLength:number = 0;
+            if (showTotals) {
+                xLength = 1;
+            }
+
+            var xTotal:number = 0;
 
             var k, id, categoryX, categoryY, values;
             var fieldIndex:FieldIndex = {
                 rowIndex:null,
+                rowName:null,
                 rowSortOrderIndex:null,
                 columnIndex:null,
+                columnName:null,
                 valueIndex:null,
+                valueName:null,
                 tooltipValueIndexes:[{
                     name:null,
                     index:null
@@ -171,10 +189,13 @@ module powerbi.extensibility.visual {
              for (var i:number = 0; i < dataView.table.columns.length; i++) {
                 if (dataView.table.columns[i].roles['Columns']) {
                     fieldIndex.columnIndex = i;
+                    fieldIndex.columnName = dataView.table.columns[i].displayName;
                 } else if (dataView.table.columns[i].roles['Rows']) {
                     fieldIndex.rowIndex = i;
+                    fieldIndex.rowName = dataView.table.columns[i].displayName;
                 } else if (dataView.table.columns[i].roles['Values']) {
                     fieldIndex.valueIndex = i;
+                    fieldIndex.valueName = dataView.table.columns[i].displayName;
                 } else if (dataView.table.columns[i].roles['RowSortOrder']) {
                     fieldIndex.rowSortOrderIndex = i;
                 } else if (dataView.table.columns[i].roles['ToolTipData']) {
@@ -193,60 +214,82 @@ module powerbi.extensibility.visual {
                 return a[fieldIndex.rowSortOrderIndex] > b[fieldIndex.rowSortOrderIndex] ? 1 : -1;
             });
             
-
-             firstSort = <number>dataView.table.rows[0][fieldIndex.columnIndex]
+            firstSort = <number>dataView.table.rows[0][fieldIndex.columnIndex]
             
-             for (var i:number = 0; i < dataView.table.rows.length; i++) {
-                 if (dataView.table.rows[i][fieldIndex.columnIndex] === firstSort) {
+            for (var i:number = 0; i < dataView.table.rows.length; i++) {
+                if (dataView.table.rows[i][fieldIndex.columnIndex] === firstSort) {
                     yLength ++;
-                 } else {
-                     break;
-                 }
-             }
+                } else {
+                    break;
+                }
+            }
              
-
              debugger;
 
             //fill Y-Axis
             for (var i:number = 0; i < dataView.table.rows.length; i++) {
                 
-                var xTotal:number = 0;
-                var y:number = 0;
                 var yAxis:string = dataView.table.rows[i][fieldIndex.rowIndex].toString();
 
-                    //add Y Category
-              //  if (currentCatY !== yAxis && dataView.table.rows[i][fieldIndex.columnIndex] === firstSort) {
-               //     catY.push({label:yAxis, highlight: null});
-              //      currentCatY = yAxis;
-              //  }
-                
-                var columnNo:number = parseInt(<string>dataView.table.rows[i][fieldIndex.columnIndex]);
-                if (columnNo > xLength) {
-                    xLength = columnNo;
-                    //currentYCount = 0; //also reset this
-                }
-
                 if (currentRowSortOrder !== dataView.table.rows[i][fieldIndex.rowSortOrderIndex]) {
+                    
+                    if (showTotals && currentYCount >= 0) {
+                         //add total datapoint at the end of the x-axis
+                        dataPoints.push({
+                            categoryY: yAxis,
+                            x:rowMaxColumnNo,
+                            y:currentYCount,
+                            overrideDimension1:false,
+                            overrideDimension2:false,
+                            borderDimension:false,
+                            timelineDimension:false,
+                            valueName: 'Total',
+                            value: Math.round(xTotal / rowMaxColumnNo),
+                            identity: null,
+                            fill:null,
+                            isTotal:true,
+                            selected:false,
+                            tooltipData:null
+                        });
+                    }
+                    
                     //add new yAxis label to array
                     catY.push({label:yAxis, highlight: null});
-                    //reset 
+                    //reset
+                    rowMaxColumnNo = 0;
+                    xTotal = 0; 
                     currentRowSortOrder = dataView.table.rows[i][fieldIndex.rowSortOrderIndex];
                     currentYCount++;
                 }
 
-                var ttd:string = null;
+                var currentColumnNo = parseInt(<string>dataView.table.rows[i][fieldIndex.columnIndex]);
+                if (currentColumnNo > rowMaxColumnNo) {
+                    rowMaxColumnNo = currentColumnNo;
+                }
+                if (currentColumnNo > xLength) {
+                    xLength = currentColumnNo;
+                }
+
+                var ttd:any = [];
                 if (fieldIndex.tooltipValueIndexes.length > 0) {
-                    ttd =  <string>dataView.table.rows[i][fieldIndex.tooltipValueIndexes[0].index].toString()
+                    for (var j:number = 0; j < fieldIndex.tooltipValueIndexes.length; j++) {
+                        var tt:ToolTips = {
+                            name:fieldIndex.tooltipValueIndexes[j].name,
+                            value:dataView.table.rows[i][fieldIndex.tooltipValueIndexes[j].index]
+                        }
+                        ttd.push(tt);
+                    }
                 }
                 
                 dataPoints.push({
                     categoryY: yAxis,
-                    x:columnNo - 1,
+                    x:currentColumnNo - 1,
                     y:currentYCount,
                     overrideDimension1:false,
                     overrideDimension2:false,
                     borderDimension:false,
                     timelineDimension:false,
+                    valueName:fieldIndex.valueName,
                     value: parseInt(<string>dataView.table.rows[i][fieldIndex.valueIndex]),
                     identity: null,//host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
                     fill:null,
@@ -254,34 +297,8 @@ module powerbi.extensibility.visual {
                     selected:false,
                     tooltipData:ttd
                 });
-
-                /*if (currentYCount > yLength) {
-                    currentYCount = 0;
-                } else {
-                    currentYCount ++;
-                }*/
-                
-                
-                //xTotal += datapoint.value;
-
-                //add total datapoint at the end of the x-axis
-
-               /* if (showTotals) {
-                    dataPoints.push({
-                        categoryY: yAxis,
-                        x:j,
-                        y:i,
-                        overrideDimension1:false,
-                        overrideDimension2:false,
-                        borderDimension:false,
-                        timelineDimension:false,
-                        value: Math.round(xTotal / dataView.categorical.values[i].values.length),
-                        identity: null,
-                        fill:null,
-                        isTotal:true,
-                        selected:false
-                    });
-                }*/
+                        
+                xTotal += parseInt(<string>dataView.table.rows[i][fieldIndex.valueIndex]);
 
         }  
               
@@ -689,35 +706,23 @@ module powerbi.extensibility.visual {
         }*/
 
         private static getTooltipData(value: any): VisualTooltipDataItem[] {
-            var val = value.value.toString();
-            if (val.length > 0) {
-                val += '%';
+            var tooltipData = [];
+            if (value.value !== undefined || value.value !== null) {
+                tooltipData.push({
+                    displayName:value.valueName,
+                    value:value.value,
+                    color:value.color
+                });
             }
-             return [{
-                 displayName: null,
-                 value: value.categoryY.toString(),
-                 color: value.color
-             },
-             {
-                 displayName: 'Task',
-                 value: value.tooltipData.toString(),
-                 color: value.color
-             },
-             {
-                 displayName: '% Complete',
-                 value: val,
-                 color: value.color
-             },
-             {
-                 displayName: 'X',
-                 value: value.x.toString(),
-                 color: value.color
-             },
-             {
-                 displayName: 'Y',
-                 value: value.y.toString(),
-                 color: value.color
-             }];
+            if (value.tooltipData && value.tooltipData.length && value.tooltipData.length > 0) {
+                for (var i:number = 0; i < value.tooltipData.length; i++) {
+                    tooltipData.push({
+                        displayName:value.tooltipData[i].name,
+                        value:value.tooltipData[i].value
+                    });
+                }
+            }
+             return tooltipData;
          }
 
         private setViewportSize(viewport: IViewport): void {
