@@ -6,9 +6,9 @@
                     "displayName":"Rows"
                 },
                 {
-                    "name": "RowSortOrder",
+                    "name": "RowUniqueIdentifier",
                     "kind": "Grouping",
-                    "displayName":"Row Sort Order"
+                    "displayName":"Row Unique Identifier"
                 },
                 {
                     "name": "Columns",
@@ -24,16 +24,6 @@
                     "name": "ToolTipData",
                     "kind": "Grouping",
                     "displayName": "ToolTip Data"
-                },
-                {
-                    "name": "YAxisHighlight",
-                    "kind": "Measure",
-                    "displayName": "Y-Axis Highlight (Not implemented)"
-                },
-                {
-                    "name": "XAxisHighlight",
-                    "kind": "Measure",
-                    "displayName": "X-Axis Highlight (Not implemented)"
                 },
                 {
                     "name": "OverrideDimension1",
@@ -64,7 +54,7 @@
                         [
                             { "bind": { "to": "Columns" } },
                             { "bind": { "to": "Rows" } },
-                            { "bind": { "to": "RowSortOrder" } },                        
+                            { "bind": { "to": "RowUniqueIdentifier" } },                        
                             { "bind": { "to": "Values" } },
                             { "bind": { "to": "ToolTipData" } },
                             { "bind": { "to": "OverrideDimension1" } },
@@ -79,9 +69,41 @@
                 "general": {
                     "displayName": "General",
                     "properties": {
+                        "showData": {
+                            "type": { "bool": true },
+                            "displayName": "Show Values In Grid"
+                        },
+                        "showTotals": {
+                            "type": { "bool": true },
+                            "displayName": "Show Totals"
+                        },
+                        "totalXTitle": {
+                            "type": { "text": true },
+                            "displayName": "X-Axis Total Title"
+                        },
                         "default1Color": {
                             "type": { "fill": { "solid": { "color": true } } },
                             "displayName": "Default Colour"
+                        },
+                        "totalsColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Totals Colour"
+                        },
+                        "overrideDimension1Color": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Override Dimension 1 Colour"
+                        },
+                        "overrideDimension2Color": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Override Dimension 2 Colour"
+                        },
+                        "borderDimensionColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Border Dimension Colour"
+                        },
+                        "timelineDimensionColor": {
+                            "type": { "fill": { "solid": { "color": true } } },
+                            "displayName": "Timeline Dimension Colour"
                         },
                         "color1": {
                             "type": { "fill": { "solid": { "color": true } } },
@@ -162,50 +184,6 @@
                         "color10Val": {
                             "type": { "numeric": true },
                             "displayName": "Colour 10 Value"
-                        },
-                        "XAxisHighlightColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "X-Axis Highlight Colour"
-                        },
-                        "YAxisHighlightColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Y-Axis Highlight Colour"
-                        },
-                        "overrideDimension1Color": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Override Dimension 1 Colour"
-                        },
-                        "overrideDimension2Color": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Override Dimension 2 Colour"
-                        },
-                        "borderDimensionColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Border Dimension Colour"
-                        },
-                        "timelineDimensionColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Timeline Dimension Colour"
-                        },
-                        "showData": {
-                            "type": { "bool": true },
-                            "displayName": "Show Values In Grid"
-                        },
-                        "showTotals": {
-                            "type": { "bool": true },
-                            "displayName": "Show Totals"
-                        },
-                        "totalXTitle": {
-                            "type": { "text": true },
-                            "displayName": "X-Axis Total Title"
-                        },
-                        "totalYTitle": {
-                            "type": { "text": true },
-                            "displayName": "Y-Axis Total Title"
-                        },
-                        "totalsColor": {
-                            "type": { "fill": { "solid": { "color": true } } },
-                            "displayName": "Totals Colour"
                         }
                     }
                 }
