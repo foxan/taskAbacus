@@ -128,7 +128,7 @@ module powerbi.extensibility.visual {
         private selectionManager: ISelectionManager;
         private dataView: DataView;
         private dicColor = [];
-        private defaultColor = '#448d86';
+        private defaultColor = '#00bcab';
         private totalXTitle = 'Total';
         private totalYTitle = 'Total';
         private totalsColor = '#5E5E5E';
@@ -146,7 +146,7 @@ module powerbi.extensibility.visual {
         private dataViews: DataView[];
         private chartData: any;
 
-         private tooltipServiceWrapper: ITooltipServiceWrapper;
+        private tooltipServiceWrapper: ITooltipServiceWrapper;
 
 
         /*constructor(options: VisualConstructorOptions) {
@@ -154,6 +154,20 @@ module powerbi.extensibility.visual {
             this.target = options.element;
             this.updateCount = 0;
         }*/
+
+        public static getSelectionIds(dataView: DataView, host: IVisualHost): ISelectionId[] {
+            return dataView.table.identity.map((identity: DataViewScopeIdentity) => {
+                const categoryColumn: DataViewCategoryColumn = {
+                    source: dataView.table.columns[0],
+                    values: null,
+                    identity: [identity]
+                };
+
+                return host.createSelectionIdBuilder()
+                    .withCategory(categoryColumn, 0)
+                    .createSelectionId();
+            });
+        }
 
         public static visualTransform(dataView: DataView, host: IVisualHost, showTotals:boolean, totalXTitle: string, totalYTitle: string): any {
             // no category - nothing to display
@@ -164,6 +178,7 @@ module powerbi.extensibility.visual {
             || !dataView.table.rows[0].length)
                 return { datapoints:null };
 
+            let tableSelectionId: ISelectionId[] = TaskAbacus.getSelectionIds(dataView,host);
             var dataPoints: TaskAbacusDataPoint[] = [];
             var catY: TaskAbacusCategoryY[] = [];
             var currentCatY:string = null;
@@ -303,7 +318,7 @@ module powerbi.extensibility.visual {
                         ttd.push(tt);
                     }
                 }
-                
+               
                 dataPoints.push({
                     categoryY: yAxis,
                     x:currentColumnNo - 1,
@@ -314,7 +329,8 @@ module powerbi.extensibility.visual {
                     timelineDimension:<boolean>dataView.table.rows[i][fieldIndex.timelineDimension],
                     valueName:fieldIndex.valueName,
                     value: parseInt(<string>dataView.table.rows[i][fieldIndex.valueIndex]),
-                    identity: null,//host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
+                    //identity: host.createSelectionIdBuilder().withCategory(dataView.categorical.categories[0], j).withSeries(dataView.categorical.values, dataView.categorical.values[i]).withMeasure(dataView.categorical.values[i].source.queryName).createSelectionId(),
+                    identity: tableSelectionId[i],
                     fill:null,
                     isTotal:false,
                     selected:false,
@@ -332,6 +348,7 @@ module powerbi.extensibility.visual {
             };
         }
 
+        
 
        constructor(options: VisualConstructorOptions) {
 
@@ -355,6 +372,9 @@ module powerbi.extensibility.visual {
 
             this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
             this.selectionManager = options.host.createSelectionManager();
+
+            
+            
         }
 
         public update(options: VisualUpdateOptions): void {
@@ -773,7 +793,7 @@ module powerbi.extensibility.visual {
                     }
                 }
             }
-            return '#5E5E5E';
+            return '#00bcab';
         }
 
         private getOverrideDimension1Color(dataView: DataView): string {
